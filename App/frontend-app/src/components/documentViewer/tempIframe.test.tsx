@@ -21,10 +21,8 @@ jest.mock('@react-pdf-viewer/default-layout', () => ({
   defaultLayoutPlugin: () => ({}),
 }));
 
-// Mock pdfjs worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-// Create a mock metadata object matching the Document interface
 const mockMetadata: Document = {
   page_number: 1,
   documentId: 'doc-001',
