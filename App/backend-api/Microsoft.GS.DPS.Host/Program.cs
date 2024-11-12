@@ -10,6 +10,24 @@ using Microsoft.AspNetCore.Http.Features;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+
+    .AddMicrosoftIdentityWebApi(options =>
+
+    {
+
+        configuration.Bind("AzureAd", options);
+
+        options.EventsType = typeof(CustomJwtBearerEvents);
+ 
+    }, options =>
+
+    {
+
+        configuration.Bind("AzureAd", options);
+
+    });
+ 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -68,6 +86,8 @@ app.UseSwaggerUI(options =>
 //}
 
 app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.Run();
 
