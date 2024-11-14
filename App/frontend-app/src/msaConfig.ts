@@ -3,9 +3,9 @@ import { Configuration, LogLevel } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
-    clientId: "f9553678-94e9-433b-b847-f1151e144351", //import.meta.env.VITE_MSAL_AUTH_CLIENTID,//"f9553678-94e9-433b-b847-f1151e144351",
-    authority: "https://login.microsoftonline.com/52b39610-0746-4c25-a83d-d4f89fadedfe", //import.meta.env.VITE_MSAL_AUTH_AUTHORITY,// "https://login.microsoftonline.com/52b39610-0746-4c25-a83d-d4f89fadedfe",
-    redirectUri: "http://localhost:5900" //i
+    clientId: import.meta.env.VITE_MSAL_AUTH_CLIENTID, 
+    authority: import.meta.env.VITE_MSAL_AUTH_AUTHORITY,
+    redirectUri: import.meta.env.VITE_MSAL_REDIRECT_URL,
   },
   cache: {
     cacheLocation: 'localStorage', // Use localStorage for persistent cache
