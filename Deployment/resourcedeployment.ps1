@@ -782,7 +782,7 @@ try {
 
     # Variables
     $tenantId = (Get-AzContext).Tenant.Id
-    $redirectUri = $fqdn  # Change this to your app's redirect URI
+    $redirectUri = "https://$fqdn"  # Change this to your app's redirect URI
     $secretDuration = (Get-Date).AddYears(1)  # Secret valid for 1 year
 
     # Step 1: Create the App Registration
