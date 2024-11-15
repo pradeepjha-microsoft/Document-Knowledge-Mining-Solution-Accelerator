@@ -792,7 +792,7 @@ try {
 
     # Step 2: Update platform type to 'Single-page application'
     Write-Host "Setting platform type to 'Single-page application' with redirect URI '$redirectUri'..."
-    $updatedApp = Set-AzADApplication -ObjectId $app.Id -ReplyUrls $redirectUri
+    $updatedApp = Set-AzADApplication -ObjectId $app.Id -SPARedirectUri $redirectUri
     Write-Host "Platform set to 'Single-page application' with redirect URI '$redirectUri'."
 
 
