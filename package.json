@@ -8,11 +8,13 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
+    "i18next": "^23.16.8",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.14"
+    "tailwindcss": "^3.4.15"
   }
 }
