@@ -24,7 +24,7 @@ const config: Config.InitialOptions = {
 
   setupFiles: ['<rootDir>/jest.polyfills.js'],
   collectCoverage: true,
-  //collectCoverageFrom: ['src/**/*.{ts,tsx}'],  // Adjust the path as needed
+  collectCoverageFrom: ['src/**/*.{ts,tsx}'],  // Adjust the path as needed
   //coverageReporters: ['json', 'lcov', 'text', 'clover'],
   coverageThreshold: {
     global: {
