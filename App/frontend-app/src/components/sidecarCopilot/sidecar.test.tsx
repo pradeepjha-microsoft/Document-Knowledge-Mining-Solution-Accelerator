@@ -1,129 +1,157 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { SidecarCopilot } from "./sidecar";
-import { AppContext } from "../../AppContext";
-import { Completion } from "../../api/chatService";
-import { Button } from "@fluentui/react-components";
-import { Textarea } from "@fluentai/textarea";
-import { ChatApiResponse } from "../../api/apiTypes/chatTypes";
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { SidecarCopilot } from './sidecar';
+import { OptionsPanel } from '../chat/optionsPanel';
+import { AppContext } from '../../AppContext';
+import { Completion } from '../../api/chatService';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@fluentui/react-components';
 
-// Mock the necessary functions
-jest.mock("@fluentai/textarea", () => ({
-  Textarea: jest.fn(() => <textarea />),
-}));
-jest.mock("../../api/chatService", () => ({
-  Completion: jest.fn(),
-}));
-jest.mock("react-i18next", () => ({
-  useTranslation: jest.fn().mockReturnValue({ t: (key: any) => key }),
+// Mocking the necessary components and API calls
+jest.mock('@fluentai/react-copilot-chat', () => ({
+    CopilotProvider: jest.fn(),
+    CopilotChat: jest.fn(),
+    UserMessage: jest.fn(),
+    CopilotMessage: jest.fn(),
 }));
 
-describe("SidecarCopilot", () => {
-  let mockSetConversationAnswers: jest.Mock;
-  let mockSetQuery: jest.Mock;
-  let mockSetFilters: jest.Mock;
-  let mockConversationAnswers: any[];
+jest.mock('../../api/chatService', () => ({
+    Completion: jest.fn(),
+}));
 
-  beforeEach(() => {
-    // Mocking context and necessary hooks
-    mockSetConversationAnswers = jest.fn();
-    mockSetQuery = jest.fn();
-    mockSetFilters = jest.fn();
-    mockConversationAnswers = [
-      ["How do I add a user?", { answer: "You can add a user by clicking 'Add User'", suggestingQuestions: [], documentIds: [], keywords: [] }],
-    ];
+jest.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key: any) => key, // Mock translation function
+    }),
+}));
 
-    // Providing the required context values
-    render(
-      <AppContext.Provider
-        value={{
-          conversationAnswers: mockConversationAnswers,
-          setConversationAnswers: mockSetConversationAnswers,
-          query: "",
-          setQuery: mockSetQuery,
-          filters: {},
-          setFilters: mockSetFilters,
-        }}
-      >
-        <SidecarCopilot
-          searchResultDocuments={[]}
-          selectedDocuments={[]}
-          chatWithDocument={[]}
-        />
-      </AppContext.Provider>
-    );
-  });
 
-  it("renders without crashing", () => {
-    expect(screen.getByPlaceholderText("Ask a question or request (ctrl + enter to submit)")).toBeInTheDocument();
-  });
+jest.mock('../chat/optionsPanel', () => ({
+  OptionsPanel: jest.fn(() => <div>Mocked OptionsPanel</div>),
+}));
 
-  it("clears the chat when 'New Topic' button is clicked", () => {
-    const newTopicButton = screen.getByRole("button", { name: "components.chat.new-topic" });
-    fireEvent.click(newTopicButton);
 
-    expect(mockSetConversationAnswers).toHaveBeenCalledWith([]);
-  });
+describe('SidecarCopilot', () => {
+    let setConversationAnswersMock: jest.Mock<any, any, any>;
 
-  it("submits a question and makes an API request", async () => {
-    const mockResponse: ChatApiResponse = {
-      answer: "Here is the answer to your question.",
-      suggestingQuestions: [],
-      documentIds: [],
-      keywords: [],
-    };
-
-    // Mock the API response
-    (Completion as jest.Mock).mockResolvedValue(mockResponse);
-
-    const textarea = screen.getByPlaceholderText("Ask a question or request (ctrl + enter to submit)");
-    fireEvent.change(textarea, { target: { value: "What is React?" } });
-
-    const submitButton = screen.getByRole("button", { name: "Send" });
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(Completion).toHaveBeenCalledWith({
-        Question: "What is React?",
-        chatSessionId: "",
-        DocumentIds: [],
-      });
-
-      // Verify conversation answers are updated
-      expect(mockSetConversationAnswers).toHaveBeenCalledWith([
-        ...mockConversationAnswers,
-        ["What is React?", mockResponse, expect.any(Date), expect.any(Date)],
-      ]);
+    beforeEach(() => {
+        setConversationAnswersMock = jest.fn();
+        (Completion as jest.Mock).mockReset();
     });
-  });
 
-  it("displays conversation messages correctly", () => {
-    // Ensure the conversation messages render correctly
-    expect(screen.getByText("How do I add a user?")).toBeInTheDocument();
-    expect(screen.getByText("You can add a user by clicking 'Add User'")).toBeInTheDocument();
-  });
+    it('renders the component correctly', () => {
+        render(
+            <AppContext.Consumer>
+                {({ conversationAnswers, setConversationAnswers }) => (
+                    <SidecarCopilot
+                        searchResultDocuments={[]}
+                        selectedDocuments={[]}
+                        chatWithDocument={[]}
+                    />
+                )}
+            </AppContext.Consumer>
+        );
 
-  it("shows loading state when API request is in progress", async () => {
-    // Mock the API request to simulate loading
-    (Completion as jest.Mock).mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 1000)));
-
-    const textarea = screen.getByPlaceholderText("Ask a question or request (ctrl + enter to submit)");
-    fireEvent.change(textarea, { target: { value: "What is Jest?" } });
-
-    const submitButton = screen.getByRole("button", { name: "Send" });
-    fireEvent.click(submitButton);
-
-    expect(screen.getByText("Loading...")).toBeInTheDocument(); // You might need to adjust based on the actual loading indicator implementation
-
-    await waitFor(() => {
-      expect(Completion).toHaveBeenCalled();
+        // Check if input field and button are rendered
+        expect(screen.getByPlaceholderText('Ask a question or request (ctrl + enter to submit)')).toBeInTheDocument();
+        expect(screen.getByText('components.chat.new-topic')).toBeInTheDocument();
     });
-  });
 
-  it("handles disabling sources correctly", () => {
-    const sourceButton = screen.getByRole("button", { name: "Selected Document" });
-    fireEvent.click(sourceButton);
+    it('handles sending a message and receiving a response', async () => {
+        const mockResponse = { answer: '<p>Mock response</p>' };
+        (Completion as jest.Mock).mockResolvedValue(mockResponse);
 
-    expect(screen.getByRole("button", { name: "Selected Document" })).toBeDisabled();
-  });
+        render(
+            <AppContext.Consumer>
+                {({ conversationAnswers, setConversationAnswers }) => (
+                    <SidecarCopilot
+                        searchResultDocuments={[]}
+                        selectedDocuments={[]}
+                        chatWithDocument={[]}
+                    />
+                )}
+            </AppContext.Consumer>
+        );
+
+        const inputField = screen.getByPlaceholderText('Ask a question or request (ctrl + enter to submit)');
+        const sendButton = screen.getByRole('button', { name: 'components.chat.new-topic' });
+
+        // Simulate user input and sending the message
+        fireEvent.change(inputField, { target: { value: 'What is AI?' } });
+        fireEvent.click(sendButton);
+
+        // Mock API call to Completion
+        await waitFor(() => expect(Completion).toHaveBeenCalledTimes(1));
+
+        // Verify the answer was rendered
+        expect(screen.getByText('Mock response')).toBeInTheDocument();
+    });
+
+    it('clears chat when new topic button is clicked', () => {
+        render(
+            <AppContext.Consumer>
+                {({ conversationAnswers, setConversationAnswers }) => (
+                    <SidecarCopilot
+                        searchResultDocuments={[]}
+                        selectedDocuments={[]}
+                        chatWithDocument={[]}
+                    />
+                )}
+            </AppContext.Consumer>
+        );
+
+        const newTopicButton = screen.getByRole('button', { name: 'components.chat.new-topic' });
+        fireEvent.click(newTopicButton);
+
+        // Check that the conversationAnswers were cleared
+        expect(setConversationAnswersMock).toHaveBeenCalledWith([]);
+    });
+
+    it('correctly handles model and source changes', () => {
+        render(
+            <AppContext.Consumer>
+                {({ conversationAnswers, setConversationAnswers }) => (
+                    <SidecarCopilot
+                        searchResultDocuments={[]}
+                        selectedDocuments={[]}
+                        chatWithDocument={[]}
+                    />
+                )}
+            </AppContext.Consumer>
+        );
+
+        // Change model and source
+        fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'chat_40' } });
+        fireEvent.click(screen.getByText('Selected Document'));
+
+        // Check if the model and source state is updated
+        expect(screen.getByLabelText('Model')).toBe('chat_40');
+        expect(screen.getByText('Selected Document')).toBeInTheDocument();
+    });
+
+    it('disables input when loading', async () => {
+        (Completion as jest.Mock).mockResolvedValue({ answer: 'Loading...' });
+
+        render(
+            <AppContext.Consumer>
+                {({ conversationAnswers, setConversationAnswers }) => (
+                    <SidecarCopilot
+                        searchResultDocuments={[]}
+                        selectedDocuments={[]}
+                        chatWithDocument={[]}
+                    />
+                )}
+            </AppContext.Consumer>
+        );
+
+        const inputField = screen.getByPlaceholderText('Ask a question or request (ctrl + enter to submit)');
+
+        // Ensure input is disabled while loading
+        fireEvent.change(inputField, { target: { value: 'What is AI?' } });
+        expect(inputField).toBeDisabled();
+
+        await waitFor(() => expect(Completion).toHaveBeenCalledTimes(1));
+
+        // Check that input is enabled again
+        expect(inputField).not.toBeDisabled();
+    });
 });
