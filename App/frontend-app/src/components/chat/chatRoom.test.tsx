@@ -357,8 +357,130 @@ it("updates the character count as the user types", () => {
 
   expect(screen.getByText("5 / 500")).toBeInTheDocument();
 });
-
 /*
+
+it("processes multiple user inputs sequentially", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const CompletionMock = require("../../api/chatService").Completion;
+  CompletionMock.mockResolvedValueOnce({ answer: "First response" })
+    .mockResolvedValueOnce({ answer: "Second response" });
+
+  const mockContext = {
+    ...mockContextValue,
+    setConversationAnswers: jest.fn(),
+  };
+
+  render(
+    <AppContext.Provider value={mockContext}>
+      <ChatRoom {...defaultProps} />
+    </AppContext.Provider>
+  );
+
+  const input = screen.getByLabelText("Chat input");
+  fireEvent.change(input, { target: { value: "First input" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  await waitFor(() => {
+    expect(screen.getByText("First response")).toBeInTheDocument();
+  });
+
+  fireEvent.change(input, { target: { value: "Second input" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  await waitFor(() => {
+    expect(screen.getByText("Second response")).toBeInTheDocument();
+  });
+});
+it("displays no suggestions when API returns empty suggestions", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const CompletionMock = require("../../api/chatService").Completion;
+  CompletionMock.mockResolvedValueOnce({
+    answer: "This is a test response without suggestions.",
+    suggestingQuestions: [],
+  });
+
+  const mockContext = {
+    ...mockContextValue,
+    setConversationAnswers: jest.fn(),
+  };
+
+  render(
+    <AppContext.Provider value={mockContext}>
+      <ChatRoom {...defaultProps} />
+    </AppContext.Provider>
+  );
+
+  const input = screen.getByLabelText("Chat input");
+  fireEvent.change(input, { target: { value: "Test no suggestions" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  await waitFor(() => {
+    expect(screen.queryByRole("button")).not.toBeInTheDocument(); // No suggestion buttons should appear
+  });
+});
+it("clears the chat when clearChatFlag is true", async () => {
+  const mockContext = {
+    ...mockContextValue,
+    setConversationAnswers: jest.fn(),
+  };
+
+  const { rerender } = render(
+    <AppContext.Provider value={mockContext}>
+      <ChatRoom {...defaultProps} clearChatFlag={true} />
+    </AppContext.Provider>
+  );
+
+  const input = screen.getByLabelText("Chat input");
+  fireEvent.change(input, { target: { value: "First input" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  await waitFor(() => {
+    expect(screen.getByText("First response")).toBeInTheDocument();
+  });
+
+  rerender(
+    <AppContext.Provider value={mockContext}>
+      <ChatRoom {...defaultProps} clearChatFlag={true} />
+    </AppContext.Provider>
+  );
+
+  await waitFor(() => {
+    expect(screen.queryByText("First response")).not.toBeInTheDocument(); // The chat should be cleared
+  });
+});
+it("shows loading state while waiting for the API response", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const CompletionMock = require("../../api/chatService").Completion;
+  CompletionMock.mockResolvedValueOnce({
+    answer: "This is a delayed response.",
+    suggestingQuestions: ["How can we improve the UI?"],
+  });
+
+  const mockContext = {
+    ...mockContextValue,
+    setConversationAnswers: jest.fn(),
+  };
+
+  render(
+    <AppContext.Provider value={mockContext}>
+      <ChatRoom {...defaultProps} />
+    </AppContext.Provider>
+  );
+
+  const input = screen.getByLabelText("Chat input");
+  fireEvent.change(input, { target: { value: "Delayed response" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  expect(screen.getByText("Loading...")).toBeInTheDocument(); // Loading state should appear
+
+  await waitFor(() => {
+    expect(screen.getByText("This is a delayed response.")).toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument(); // Loading state should disappear
+  });
+});
+
+
+
 it("triggers an API call when a suggested question is clicked", async () => {
   render(
       <AppContext.Provider value={mockContextValue}>
