@@ -1,3 +1,120 @@
+<<<<<<< HEAD
+=======
+// import { render, screen, fireEvent } from '@testing-library/react';
+// import { Pagination } from './pagination';
+// import { ChevronLeft24Regular, ChevronRight24Regular } from '@fluentui/react-icons';
+
+// // Mocking the usePagination hook
+// jest.mock('../../utils/customHooks/usePagination', () => ({
+//   usePagination: (props: any) => {
+//     const range = [];
+//     for (let i = 1; i <= props.totalCount; i++) {
+//       range.push(i);
+//     }
+//     return range;
+//   },
+//   DOTS: '...',
+// }));
+
+// describe('Pagination', () => {
+//   const mockOnPageChange = jest.fn();
+
+//   beforeEach(() => {
+//     mockOnPageChange.mockClear(); // Clear previous calls to mock function
+//   });
+
+//   it.only('should render pagination buttons correctly', () => {
+//     render(<Pagination totalCount={2} pageSize={4} currentPage={1} onPageChange={mockOnPageChange} />);
+    
+//     // Check if the left arrow button is present and enabled
+//     expect(screen.getByRole('button', { name: /left/i })).toBeInTheDocument();
+//     expect(screen.getByRole('button', { name: /left/i })).not.toBeDisabled();
+    
+//     // Check if the right arrow button is present and enabled
+//     expect(screen.getByRole('button', { name: /right/i })).toBeInTheDocument();
+//     expect(screen.getByRole('button', { name: /right/i })).not.toBeDisabled();
+    
+//     // Check if page buttons are rendered correctly
+//     expect(screen.getByText('1')).toBeInTheDocument();
+//     expect(screen.getByText('2')).toBeInTheDocument();
+//     expect(screen.getByText('3')).toBeInTheDocument();
+//     expect(screen.getByText('4')).toBeInTheDocument();
+//     expect(screen.getByText('5')).toBeInTheDocument();
+//   });
+
+//   it('should disable left arrow button on the first page', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={1} onPageChange={mockOnPageChange} />);
+    
+//     // Left arrow should be disabled on the first page
+//     expect(screen.getByRole('button', { name: /left/i })).toBeInTheDocument();
+//   });
+
+//   it('should disable right arrow button on the last page', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={5} onPageChange={mockOnPageChange} />);
+    
+//     // Right arrow should be disabled on the last page
+//     expect(screen.getByRole('button', { name: /right/i })).toBeDisabled();
+//   });
+
+//   it('should call onPageChange with correct page number on page button click', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={1} onPageChange={mockOnPageChange} />);
+    
+//     const pageButton = screen.getByText('3');
+//     fireEvent.click(pageButton);
+    
+//     expect(mockOnPageChange).toHaveBeenCalledWith(3);
+//   });
+
+//   it('should call onPageChange with correct page number on next button click', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={1} onPageChange={mockOnPageChange} />);
+    
+//     const nextButton = screen.getByRole('button', { name: /right/i });
+//     fireEvent.click(nextButton);
+    
+//     expect(mockOnPageChange).toHaveBeenCalledWith(2);
+//   });
+
+//   it('should call onPageChange with correct page number on previous button click', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={2} onPageChange={mockOnPageChange} />);
+    
+//     const prevButton = screen.getByRole('button', { name: /left/i });
+//     fireEvent.click(prevButton);
+    
+//     expect(mockOnPageChange).toHaveBeenCalledWith(1);
+//   });
+
+//   it('should render the "..." dots correctly', () => {
+//     render(<Pagination totalCount={5} pageSize={10} currentPage={1} siblingCount={1} onPageChange={mockOnPageChange} />);
+    
+//     const dots = screen.getByText('...');
+//     expect(dots).toBeInTheDocument();
+//   });
+
+//   it('should return null if paginationRange is empty or invalid', () => {
+//     jest.mock('../../utils/customHooks/usePagination', () => ({
+//       usePagination: () => [],
+//       DOTS: '...',
+//     }));
+
+//     const { container } = render(<Pagination totalCount={0} pageSize={10} currentPage={1} onPageChange={mockOnPageChange} />);
+//     expect(container.firstChild).toBeNull();
+//   });
+
+//   it('should correctly handle edge cases for totalCount and currentPage', () => {
+//     // Case: totalCount = 1, should disable arrows and buttons
+//     render(<Pagination totalCount={1} pageSize={10} currentPage={1} onPageChange={mockOnPageChange} />);
+//     expect(screen.getByRole('button', { name: /left/i })).toBeDisabled();
+//     screen.debug();
+//     expect(screen.getByRole('button', { name: /right/i })).toBeDisabled();
+    
+//     // Case: totalCount < currentPage, should return null
+//     render(<Pagination totalCount={2} pageSize={10} currentPage={3} onPageChange={mockOnPageChange} />);
+//     const { container } = render(<Pagination totalCount={2} pageSize={10} currentPage={3} onPageChange={mockOnPageChange} />);
+//     expect(container.firstChild).toBeNull();
+//   });
+// });
+
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
 import { render, fireEvent, screen } from "@testing-library/react";
 import { Pagination } from "./pagination"; // Adjust import path based on your file structure
 import { ChevronLeft24Regular, ChevronRight24Regular } from "@fluentui/react-icons";
@@ -47,7 +164,11 @@ describe("Pagination Component", () => {
         // Check if the button is disabled
         expect(nextButton).toBeDisabled();
     });
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
     it("should render pagination buttons correctly", () => {
         // Mock return value for pagination
         const mockPaginationRange = [1, 2, "DOTS", 5];
