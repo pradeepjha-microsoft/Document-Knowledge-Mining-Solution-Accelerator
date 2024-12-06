@@ -14,6 +14,7 @@ const config: Config.InitialOptions = {
     '^react-markdown$': '<rootDir>/__mocks__/react-markdown.tsx',
     '^dompurify$': '<rootDir>/__mocks__/dompurify.js', // Point to the mock
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.ts',
+    "^i18next$": "<rootDir>/__mocks__/i18n.ts",
 
   },
   setupFilesAfterEnv: ['<rootDir>/src/test/setupTests.ts'], // For setting up testing environment like jest-dom
@@ -52,7 +53,9 @@ const config: Config.InitialOptions = {
     '<rootDir>/src/main.tsx',
     '<rootDir>/src/styles.tsx',
     '<rootDir>/src/vite-env.d.ts',
-    '<rootDir>/src/uploadButton2.tsx',
+    '<rootDir>/src/components/uploadButton/uploadButton2.tsx',
+    '<rootDir>/src/components/searchResult/old.tsx',
+    
   ],
 }
 
