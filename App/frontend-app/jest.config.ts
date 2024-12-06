@@ -41,7 +41,18 @@ const config: Config.InitialOptions = {
     '<rootDir>/src/state/',
     '<rootDir>/src/api/',
     '<rootDir>/src/mocks/',
-    //'<rootDir>/src/test/',
+    '<rootDir>/src/test/',
+    '<rootDir>/src/assets/',
+    '<rootDir>/src/utils/',
+    '<rootDir>/src/types/',
+
+    '<rootDir>/src/App.tsx',
+    '<rootDir>/src/AppContext.tsx',
+    '<rootDir>/src/AppRoutes.tsx',
+    '<rootDir>/src/main.tsx',
+    '<rootDir>/src/styles.tsx',
+    '<rootDir>/src/vite-env.d.ts',
+    '<rootDir>/src/uploadButton2.tsx',
   ],
 }
 
