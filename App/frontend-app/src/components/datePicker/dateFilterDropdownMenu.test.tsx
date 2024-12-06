@@ -27,7 +27,6 @@ describe("DateFilterDropdownMenu", () => {
     it("displays the correct placeholder when no filter is selected", () => {
 
         render(<DateFilterDropdownMenu {...defaultProps} />);
-        screen.debug()
         expect(screen.queryByLabelText('dropdown-label'))
     })
 
