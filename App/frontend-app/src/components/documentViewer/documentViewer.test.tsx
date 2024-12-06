@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 // import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 // import { DocDialog } from "./documentViewer";
 // import { IFrameComponent } from "./iFrameComponent";
@@ -121,6 +123,7 @@
 //   });
 // });
 
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
 
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { DocDialog } from "./documentViewer";

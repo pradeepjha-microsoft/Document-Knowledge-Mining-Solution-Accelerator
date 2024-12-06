@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 // import { render, screen } from '@testing-library/react';
 // import { IFrameComponent } from './iFrameComponent';
 // import { useTranslation } from 'react-i18next';
@@ -85,6 +87,7 @@
 //   });
 // });
 
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { IFrameComponent } from './iFrameComponent';

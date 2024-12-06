@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 // import { render, screen, fireEvent } from '@testing-library/react';
 // import { Pagination } from './pagination';
 // import { ChevronLeft24Regular, ChevronRight24Regular } from '@fluentui/react-icons';
@@ -112,6 +114,7 @@
 //   });
 // });
 
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
 import { render, fireEvent, screen } from "@testing-library/react";
 import { Pagination } from "./pagination"; // Adjust import path based on your file structure
 import { ChevronLeft24Regular, ChevronRight24Regular } from "@fluentui/react-icons";
@@ -161,7 +164,11 @@ describe("Pagination Component", () => {
         // Check if the button is disabled
         expect(nextButton).toBeDisabled();
     });
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> b23f229e67aa3d6fc54304c1356af1252f62d85b
     it("should render pagination buttons correctly", () => {
         // Mock return value for pagination
         const mockPaginationRange = [1, 2, "DOTS", 5];
