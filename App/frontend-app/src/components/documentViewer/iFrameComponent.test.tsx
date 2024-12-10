@@ -2,7 +2,17 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { IFrameComponent } from './iFrameComponent';
 import { useTranslation } from 'react-i18next';
+import { TIFFViewer } from "react-tiff";
 
+// Mocking the translation hook
+jest.mock("react-i18next", () => ({
+  useTranslation: jest.fn().mockReturnValue({ t: (key: string) => key }),
+}));
+
+// Mocking TIFFViewer component
+jest.mock("react-tiff", () => ({
+  TIFFViewer: jest.fn(() => <div>TIFF Viewer Mock</div>),
+}));
 // Mock translation function
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({
