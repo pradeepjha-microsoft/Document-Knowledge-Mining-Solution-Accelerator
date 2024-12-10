@@ -103,8 +103,10 @@ For additional training and support, please see:
 9. [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/)
 
 ### **How to install/deploy**
-
 Follow the quick deploy steps on the [deployment guide](./README.DEPLOYMENT.md) to deploy this solution to your own Azure subscription.
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2FDocument-Knowledge-Mining-Solution-Accelerator%2Farchitectureupdate%2FDeployment%2Fmain.json)
+
 
 <br>
 <h2><img src="./Images/readme/supportingDocuments.png" width="64">
