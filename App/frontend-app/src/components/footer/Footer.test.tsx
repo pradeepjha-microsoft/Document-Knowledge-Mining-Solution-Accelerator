@@ -1,53 +1,32 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
-import { Footer } from "./footer";  // Use lowercase 'footer' to match the file name
-import { I18nextProvider } from "react-i18next";
-import i18n from "i18next";
-
-// Mocking i18next for testing
-jest.mock("i18next", () => ({
-  init: jest.fn().mockResolvedValue(undefined),  // Mock init to resolve
-  t: jest.fn((key: string) => key),  // Mock translation function to return the key
-  changeLanguage: jest.fn(),  // Mock language change function
+import { render, screen } from '@testing-library/react';
+import { Footer } from './footer';  // Adjust the import according to your project structure
+import { useTranslation } from 'react-i18next';
+ 
+// Mock the useTranslation hook
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(),
 }));
-
-const _mockTranslation = {
-  components: {
-    footer: {
-      copyright: "{{year}} My Company",
-    },
-  },
-};
-
-describe("Footer Component", () => {
-  test("renders without crashing", () => {
-    render(
-      <I18nextProvider i18n={i18n}>
-        <Footer />
-      </I18nextProvider>
-    );
-    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
-  });
-
-  test("displays the correct copyright message with the current year", () => {
-    render(
-      <I18nextProvider i18n={i18n}>
-        <Footer />
-      </I18nextProvider>
-    );
-
-    const copyrightText = screen.getByText("components.footer.copyright");
-    expect(copyrightText).toBeInTheDocument();
-  });
-
-  test("uses translation function to display the year", () => {
-    render(
-      <I18nextProvider i18n={i18n}>
-        <Footer />
-      </I18nextProvider>
-    );
-    
-    // Ensure the translation key is correctly rendered
-    expect(screen.getByText("components.footer.copyright")).toBeInTheDocument();
+ 
+describe('Footer Component', () => {
+  it('renders the footer with the correct copyright and current year', () => {
+    // Creating a mock implementation for the `useTranslation` hook
+    const mockT = (key: string, options: { year: number }) => {
+      if (key === 'components.footer.copyright') {
+        return `© ${options.year} My Company`;
+      }
+      return key;
+    };
+ 
+    // Assign the mock translation function to the mocked `useTranslation` hook
+    (useTranslation as jest.Mock).mockReturnValue({ t: mockT });
+ 
+    render(<Footer />);
+ 
+    // Get the current year
+    const currentYear = new Date().getFullYear();
+ 
+    // Check if the translated text contains the correct copyright message with the year
+    expect(screen.getByText(`© ${currentYear} My Company`)).toBeInTheDocument();
   });
 });
+ 
