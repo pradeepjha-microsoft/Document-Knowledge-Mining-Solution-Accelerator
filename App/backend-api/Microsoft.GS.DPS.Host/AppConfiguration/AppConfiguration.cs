@@ -14,10 +14,17 @@ namespace Microsoft.GS.DPSHost.AppConfiguration
 
 
             //Read AppConfiguration with managed Identity
-            builder.Configuration.AddAzureAppConfiguration(options =>
+            if (Environment.GetEnvironmentVariable("APP_CONFIG_ENDPOINT") != null)
             {
-                options.Connect(new Uri(builder.Configuration["ConnectionStrings:AppConfig"]), new DefaultAzureCredential());
-            });
+                builder.Configuration.AddAzureAppConfiguration(options =>
+                {
+                    options.Connect(new Uri(Environment.GetEnvironmentVariable("APP_CONFIG_ENDPOINT")), new DefaultAzureCredential());
+                });
+            }
+            else
+            {
+                Console.WriteLine("APP_CONFIG_ENDPOINT is not set");
+            }
 
             //Read ServiceConfiguration
             builder.Services.Configure<AIServices>(builder.Configuration.GetSection("Application:AIServices"));

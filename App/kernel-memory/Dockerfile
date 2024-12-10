@@ -49,7 +49,7 @@ COPY --from=build --chown=km:km --chmod=0550 /app/publish .
 USER $USER
 
 # Used by .NET and KM to load appsettings.Production.json
-ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:9001
 ENV ASPNETCORE_HTTP_PORTS=9001
 
