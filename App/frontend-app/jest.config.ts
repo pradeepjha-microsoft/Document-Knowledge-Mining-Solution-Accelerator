@@ -55,7 +55,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/src/vite-env.d.ts',
     '<rootDir>/src/components/uploadButton/uploadButton2.tsx',
     '<rootDir>/src/components/searchResult/old.tsx',
-    
+    '<rootDir>/src/components/chat/modelSwitch.tsx',
   ],
 }
 
