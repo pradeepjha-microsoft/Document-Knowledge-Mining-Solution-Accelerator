@@ -9,13 +9,13 @@ namespace Microsoft.GS.DPS.Tests.API.Services
     {
         // The class we're testing        
 
-        private readonly ChatHost _chatService;
-        private readonly
+        //private readonly ChatHost _chatService;
+        //private readonly
 
-        public ChatHostTests()
-        {
-            _chatService = new ChatHost("tt","fff","ff","dd");  // Directly instantiate ChatService
-        }
+        //public ChatHostTests()
+        //{
+        //    _chatService = new ChatHost("tt","fff","ff","dd");  // Directly instantiate ChatService
+        //}
 
         //    [Fact]
         //    public async Task ChatAsync_ShouldReturnCorrectChatResponseAsync()

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.GS.DPS.Tests
+namespace Microsoft.GS.DPS.Tests.ModelsTest
 {
     public class PagingRequestValidatorTest
     {
