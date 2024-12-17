@@ -19,8 +19,23 @@ const config: Config.InitialOptions = {
   },
   setupFilesAfterEnv: ['<rootDir>/src/test/setupTests.ts'], // For setting up testing environment like jest-dom
   transform: {
-    '^.+\\.ts(x)?$': 'ts-jest',  // For TypeScript files
-    '^.+\\.js$': 'babel-jest',  // For JavaScript files if you have Babel
+    '^.+\\.ts(x)?$': ['ts-jest',
+      {
+        diagnostics: {
+          ignoreCodes: [1343]
+        },
+        astTransformers: {
+          before: [
+            {
+              path: 'node_modules/ts-jest-mock-import-meta',  // or, alternatively, 'ts-jest-mock-import-meta' directly, without node_modules.
+              options: { metaObjectReplacement: { env : { 'VITE_API_ENDPOINT' : 'https://mock-api-endpoint.com' }} }
+            }
+          ]
+        }
+      }
+
+    ],  // For TypeScript files
+    '^.+\\.js$': 'babel-jest',  // For JavaScript files if you have Babel 
   },
 
   setupFiles: ['<rootDir>/jest.polyfills.js'],
