@@ -1,8 +1,9 @@
 import React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
-import { SearchBox, SearchBoxHandle } from "./searchBox";
+import { SearchBox, SearchBoxHandle, UploadButton } from "./searchBox";
 import { act } from "react-dom/test-utils";
 import { Mic24Regular } from "@fluentui/react-icons";
+import { UploadMultipleFiles } from "../../api/storageService";
 
 jest.mock('use-debounce', () => ({
     useDebouncedCallback: (fn: (...args: any[]) => void) => {
@@ -26,10 +27,14 @@ jest.mock("../../api/storageService", () => ({
 describe("SearchBox", () => {
     const mockOnSearchChanged = jest.fn();
     const mockOnKeyDown = jest.fn();
-
+    let searchBoxRef: React.RefObject<SearchBoxHandle>;
     beforeEach(() => {
         jest.clearAllMocks();
+        searchBoxRef = React.createRef<SearchBoxHandle>();
     });
+    // beforeEach(() => {
+    //     jest.clearAllMocks();
+    // });
 
     it("renders the SearchBox with placeholder text", () => {
         render(
@@ -143,5 +148,104 @@ describe("SearchBox", () => {
         expect(typeof ref.current?.setValue).toBe("function");
         expect(typeof ref.current?.reset).toBe("function");
     });
+    it("renders the component with initial props", () => {
+        render(
+            <SearchBox
+                ref={searchBoxRef}
+                initialValue="test"
+                placeholder="Search..."
+                onSearchChanged={mockOnSearchChanged}
+                onKeyDown={mockOnKeyDown}
+            />
+        );
+
+        const inputElement = screen.getByPlaceholderText("Search...");
+        expect(inputElement).toBeInTheDocument();
+        expect((inputElement as HTMLInputElement).value).toBe("test");
+    });
+
+    it("calls onSearchChanged when input value changes", async () => {
+        render(
+            <SearchBox
+                ref={searchBoxRef}
+                onSearchChanged={mockOnSearchChanged}
+                onKeyDown={mockOnKeyDown}
+            />
+        );
+
+        const inputElement = screen.getByRole("searchbox");
+
+        await act(async () => {
+            fireEvent.change(inputElement, { target: { value: "hello" } });
+        });
+
+        expect(mockOnSearchChanged).toHaveBeenCalledWith("hello");
+    });
+
+    it("calls onKeyDown and handles Enter key", async () => {
+        render(
+            <SearchBox
+                ref={searchBoxRef}
+                onSearchChanged={mockOnSearchChanged}
+                onKeyDown={mockOnKeyDown}
+            />
+        );
+
+        const inputElement = screen.getByRole("searchbox");
+
+        await act(async () => {
+            fireEvent.keyDown(inputElement, { key: "Enter" });
+        });
+
+        expect(mockOnKeyDown).toHaveBeenCalled();
+        expect(mockOnSearchChanged).toHaveBeenCalled();
+    });
+
+    it("resets the value using exposed reset method", async () => {
+        render(
+            <SearchBox
+                ref={searchBoxRef}
+                onSearchChanged={mockOnSearchChanged}
+            />
+        );
+
+        const inputElement = screen.getByRole("searchbox");
+
+        await act(async () => {
+            fireEvent.change(inputElement, { target: { value: "reset test" } });
+        });
+
+        expect((inputElement as HTMLInputElement).value).toBe("reset test");
+
+        act(() => {
+            searchBoxRef.current?.reset();
+        });
+
+        expect((inputElement as HTMLInputElement).value).toBe("");
+        expect(mockOnSearchChanged).toHaveBeenLastCalledWith("");
+    });
+
+    it("does not allow input values greater than 300 characters", async () => {
+        render(
+            <SearchBox
+                ref={searchBoxRef}
+                onSearchChanged={mockOnSearchChanged}
+            />
+        );
+
+        const inputElement = screen.getByRole("searchbox");
+        const longText = "a".repeat(301);
+
+        await act(async () => {
+            fireEvent.change(inputElement, { target: { value: longText } });
+        });
+
+        expect((inputElement as HTMLInputElement).value.length).toBeLessThanOrEqual(300);
+    });
     
+
+    it("renders the UploadButton component inside the SearchBox", () => {
+        render(<SearchBox onSearchChanged={mockOnSearchChanged} />);
+        expect(screen.getByTestId("upload-div")).toBeInTheDocument();
+    });
 });
