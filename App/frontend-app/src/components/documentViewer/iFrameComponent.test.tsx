@@ -68,7 +68,6 @@ describe('IFrameComponent', () => {
         imageTypes.forEach((mimeType) => {
             const metadata = { mimeType };
             renderComponent(metadata, mockUrlWithSasToken);
-            screen.debug();
             const img = screen.findAllByAltText('Document');
             waitFor(()=>{expect(img).toBeInTheDocument()});
         });
