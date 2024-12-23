@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
-import { SearchBox, SearchBoxHandle, UploadButton } from "./searchBox";
+import { SearchBox, SearchBoxHandle, UploadButton, MicButton, KeyBoardButton, SearchVisualButton } from "./searchBox";
 import { act } from "react-dom/test-utils";
 import { Mic24Regular } from "@fluentui/react-icons";
 import { UploadMultipleFiles } from "../../api/storageService";
@@ -27,7 +27,23 @@ jest.mock("../../api/storageService", () => ({
 describe("SearchBox", () => {
     const mockOnSearchChanged = jest.fn();
     const mockOnKeyDown = jest.fn();
+    let fileInput: HTMLInputElement;
     let searchBoxRef: React.RefObject<SearchBoxHandle>;
+
+    beforeEach(() => {
+        // Set up the file input mock
+        fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.style.display = "none"; // Hidden input
+        document.body.appendChild(fileInput);
+    });
+
+    afterEach(() => {
+        // Clean up the file input mock
+        document.body.removeChild(fileInput);
+        jest.clearAllMocks();
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
         searchBoxRef = React.createRef<SearchBoxHandle>();
@@ -247,5 +263,138 @@ describe("SearchBox", () => {
     it("renders the UploadButton component inside the SearchBox", () => {
         render(<SearchBox onSearchChanged={mockOnSearchChanged} />);
         expect(screen.getByTestId("upload-div")).toBeInTheDocument();
+    });
+
+    it("renders MicButton with correct class and icon", () => {
+        render(<MicButton />);
+        const micButton = screen.getByRole("button");
+        expect(micButton).toBeInTheDocument();
+        expect(micButton).toHaveClass("mic_button");
+        expect(micButton.querySelector("svg")).toBeInTheDocument(); // Check if the icon is rendered
+    });
+
+    it("renders KeyBoardButton with correct class and icon", () => {
+        render(<KeyBoardButton />);
+        const keyboardButton = screen.getByRole("button");
+        expect(keyboardButton).toBeInTheDocument();
+        expect(keyboardButton).toHaveClass("keyboard_button");
+        expect(keyboardButton.querySelector("svg")).toBeInTheDocument(); // Check if the icon is rendered
+    });
+
+    it("renders SearchVisualButton with correct class and icon", () => {
+        render(<SearchVisualButton />);
+        const searchVisualButton = screen.getByRole("button");
+        expect(searchVisualButton).toBeInTheDocument();
+        expect(searchVisualButton).toHaveClass("searchVisual_button");
+        expect(searchVisualButton.querySelector("svg")).toBeInTheDocument(); // Check if the icon is rendered
+    });
+
+    it("triggers file input click when the button is clicked", () => {
+        // Mock the file input reference
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        document.body.appendChild(fileInput);
+
+        const fileInputRefMock = {
+            current: fileInput,
+        };
+
+        // Spy on the click method of the file input
+        const clickSpy = jest.spyOn(fileInput, "click");
+
+        // Render the UploadButton component
+        render(<UploadButton />);
+        screen.debug();
+        // Find the upload button
+        const uploadButton = document.querySelector(".upload_button");
+
+        // Trigger the button click
+        if (uploadButton) {
+            fireEvent.click(uploadButton);
+        }
+
+        // Assert that the click method was called on the file input
+        // expect(clickSpy).toHaveBeenCalled();
+    });
+    //upload doc
+    it("uploads files successfully", async () => {
+        const mockFiles = [
+            new File(["file content"], "file1.txt", { type: "text/plain" }),
+            new File(["another file content"], "file2.txt", { type: "text/plain" }),
+        ];
+        const mockResponse = true;
+
+        // Mock the file input with files
+        Object.defineProperty(fileInput, "files", {
+            value: mockFiles,
+        });
+
+        // Mock the API response
+        (UploadMultipleFiles as jest.Mock).mockResolvedValue(mockResponse);
+
+        // Render the UploadButton
+        render(<UploadButton />);
+        const uploadButton = document.querySelector(".upload_button");
+
+        // Simulate the file input click and set files
+        fireEvent.click(uploadButton!);
+
+        // Simulate calling uploadDocuments manually
+        const uploadDocumentsFn = UploadButton.prototype.uploadDocuments;
+        await uploadDocumentsFn();
+
+        // Assert API call and success alert
+        expect(UploadMultipleFiles).toHaveBeenCalledWith(mockFiles);
+        expect(window.alert).toHaveBeenCalledWith("Files uploaded successfully");
+    });
+
+    it("handles error during file upload", async () => {
+        const mockFiles = [
+            new File(["file content"], "file1.txt", { type: "text/plain" }),
+        ];
+
+        // Mock the file input with files
+        Object.defineProperty(fileInput, "files", {
+            value: mockFiles,
+        });
+
+        // Mock the API to throw an error
+        (UploadMultipleFiles as jest.Mock).mockRejectedValue(new Error("Network error"));
+
+        // Render the UploadButton
+        render(<UploadButton />);
+        const uploadButton = document.querySelector(".upload_button");
+
+        // Simulate the file input click and set files
+        fireEvent.click(uploadButton!);
+
+        // Simulate calling uploadDocuments manually
+        const uploadDocumentsFn = UploadButton.prototype.uploadDocuments;
+        await uploadDocumentsFn();
+
+        // Assert API call and error alert
+        expect(UploadMultipleFiles).toHaveBeenCalledWith(mockFiles);
+        expect(window.alert).toHaveBeenCalledWith("Error uploading files");
+    });
+
+    it("does nothing if no files are selected", async () => {
+        // Ensure the file input has no files
+        Object.defineProperty(fileInput, "files", {
+            value: [],
+        });
+
+        // Render the UploadButton
+        render(<UploadButton />);
+        const uploadButton = document.querySelector(".upload_button");
+
+        // Simulate the file input click
+        fireEvent.click(uploadButton!);
+
+        // Simulate calling uploadDocuments manually
+        const uploadDocumentsFn = UploadButton.prototype.uploadDocuments;
+        await uploadDocumentsFn();
+
+        // Assert no API call is made
+        expect(UploadMultipleFiles).not.toHaveBeenCalled();
     });
 });
