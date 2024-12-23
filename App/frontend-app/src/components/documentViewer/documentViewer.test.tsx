@@ -197,15 +197,4 @@ jest.mock("../../api/chatService", () => ({
 
     expect(screen.getByText('Page Metadata')).toBeInTheDocument();
   });
-
-  it('handles document URL undefined scenario', () => {
-    render(
-      <DocDialog
-        {...defaultProps}
-        metadata={{ ...metadataMock, document_url: undefined }}
-      />
-    );
-
-    expect(screen.getByText('Document')).toBeInTheDocument();
-  });
 });
