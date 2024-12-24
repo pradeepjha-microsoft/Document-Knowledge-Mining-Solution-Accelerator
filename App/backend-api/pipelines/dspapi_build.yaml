@@ -15,7 +15,7 @@ stages:
     - task: UseDotNet@2
       inputs:
         packageType: 'sdk'
-        version: '9.0.x' # Use the appropriate .NET 9 version
+        version: '9.0.x'  # Use the appropriate .NET 9 version
         installationPath: $(Agent.ToolsDirectory)/dotnet
         includePreviewVersions: true
 
@@ -41,3 +41,50 @@ stages:
         Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         tags: |
           $(Build.BuildId)
+
+- stage: TestAndCoverage
+  jobs:
+  - job: Test
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '9.0.x'  # Use the appropriate .NET 9 version
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+        includePreviewVersions: true
+
+    - script: |
+        dotnet restore
+      displayName: 'Restore dependencies'
+
+    - script: |
+        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory $(Build.ArtifactStagingDirectory)/TestResults
+      displayName: 'Run tests and collect code coverage'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)/TestResults
+        artifactName: 'CodeCoverage'
+        publishLocation: 'Container'
+
+    - task: Docker@2
+      displayName: Login in ACR
+      inputs:
+        command: login
+        containerRegistry: 'dps-acr-connection'
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'dps-acr-connection'
+        repository: '$(imageName)'
+        command: 'buildAndPush'
+        Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        tags: |
+          $(Build.BuildId)
+
+    - task: Codecov@1
+      inputs:
+        token: $(CODECOV_TOKEN)  # Add your Codecov token as a secret
+        file: '$(Build.ArtifactStagingDirectory)/TestResults/*/coverage.cobertura.xml'  # Path to coverage file
+        commit: $(Build.SourceVersion)
+        name: $(Build.BuildId)
