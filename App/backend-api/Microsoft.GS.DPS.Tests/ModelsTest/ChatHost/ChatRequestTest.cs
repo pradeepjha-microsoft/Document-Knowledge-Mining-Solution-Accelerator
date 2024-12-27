@@ -2,7 +2,7 @@
 using Microsoft.GS.DPS.Model.ChatHost;
 using Xunit;
 
-namespace Microsoft.GS.DPS.Tests.ModelsTest
+namespace Microsoft.GS.DPS.Tests.ModelsTest.ChatHost
 {
     public class ChatRequestTest
     {
