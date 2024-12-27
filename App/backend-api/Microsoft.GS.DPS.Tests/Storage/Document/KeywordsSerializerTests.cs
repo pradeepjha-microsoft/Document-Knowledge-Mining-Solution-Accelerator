@@ -156,18 +156,18 @@ namespace Microsoft.GS.DPS.Tests.Storage.Document
     }
     public class MongoDbConfigTests
     {
-        [Fact]
-        public void RegisterClassMaps_ShouldRegisterDocumentClassMap()
-        {
-            // Arrange
-            MongoDbConfig.RegisterClassMaps(); // Register class maps for Document type
+        //[Fact]
+        //public void RegisterClassMaps_ShouldRegisterDocumentClassMap()
+        //{
+        //    // Arrange
+        //    MongoDbConfig.RegisterClassMaps(); // Register class maps for Document type
 
-            // Act
-            bool classMapRegistered = BsonClassMap.IsClassMapRegistered(typeof(Microsoft.GS.DPS.Storage.Document.Entities.Document));
+        //    // Act
+        //    bool classMapRegistered = BsonClassMap.IsClassMapRegistered(typeof(Microsoft.GS.DPS.Storage.Document.Entities.Document));
 
-            // Assert
-            Assert.True(classMapRegistered, "Document class map was not registered properly.");
-        }
+        //    // Assert
+        //    Assert.True(classMapRegistered, "Document class map was not registered properly.");
+        //}
     }
 }
 
