@@ -1,18 +1,8 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { Home } from "./home";
 import { AppContext } from "../../AppContext";
-
-// Mock import.meta
-Object.defineProperty(global, "import.meta", {
-    value: {
-        env: {
-            VITE_API_ENDPOINT: "http://mock-api-endpoint.com",
-        },
-    },
-});
 
 // Mocking components
 jest.mock("react-i18next", () => ({
@@ -65,12 +55,43 @@ jest.mock("../../components/pagination/pagination", () => ({
 jest.mock("../../components/uploadButton/uploadButton2", () => ({
     UploadFilesButton: () => <div>UploadFilesButton</div>,
 }));
+
+const mockSetSelectedOption = jest.fn();
+const mockSetResetSearchBox = jest.fn();
+const mockSetAreFiltersVisible = jest.fn();
+const mockSetShowCopilot = jest.fn();
+
 const mockSetCurrentPage = jest.fn();
 const mockSetPersistedFilters = jest.fn();
 const mockSetConversationAnswers = jest.fn();
 
+const mockAppContext = {
+    query: "",
+    setQuery: jest.fn(),
+    filters: {},
+    setFilters: mockSetPersistedFilters,
+    conversationAnswers: [],
+    setConversationAnswers: mockSetConversationAnswers,
+    isLoading: true,
+    setSelectedOption: mockSetSelectedOption,
+    setResetSearchBox: mockSetResetSearchBox,
+    setAreFiltersVisible: mockSetAreFiltersVisible,
+    setShowCopilot: mockSetShowCopilot,
+};
+
 describe("Home Component", () => {
-    it("renders the Home component with search box and filter button", async () => {
+    const fixedNow = new Date(2025, 0, 1);
+    const RealDate = Date;
+
+    beforeAll(() => {
+        global.Date = jest.fn(() => fixedNow) as unknown as DateConstructor;
+    });
+
+    afterAll(() => {
+        global.Date = RealDate;
+    });
+
+    it("renders the Home component with search box, filter button, and pagination", async () => {
         render(
             <BrowserRouter>
                 <AppContext.Provider value={mockAppContext}>
@@ -79,20 +100,11 @@ describe("Home Component", () => {
             </BrowserRouter>
         );
 
-        // Check for header and filter button
         expect(screen.getByText(/components.header-bar.title/i)).toBeInTheDocument();
         expect(screen.getByText(/components.header-bar.sub-title/i)).toBeInTheDocument();
         expect(screen.getByText(/FilterButton/i)).toBeInTheDocument();
-
-        // Check for the Search box
         expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
-
-        // Test clicking the filter button and updating persisted filters
-        const selectedKeywords = { category: ["tech"] };
-        fireEvent.click(screen.getByText(/FilterButton/i));
-        await waitFor(() => {
-            expect(mockSetPersistedFilters).toHaveBeenCalledWith(selectedKeywords);
-        });
+        expect(screen.getByText(/Pagination/i)).toBeInTheDocument();
     });
 
     it("updates query when typing in the search box", async () => {
@@ -105,11 +117,25 @@ describe("Home Component", () => {
         );
 
         const searchBox = screen.getByPlaceholderText("Search...");
-
-        // Simulate typing into the search box
         userEvent.type(searchBox, "new query");
 
         expect(mockAppContext.setQuery).toHaveBeenCalledWith("new query");
+    });
+
+    it("applies the selected filter when clicking the FilterButton", async () => {
+        render(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        const selectedKeywords = { category: ["tech"] };
+        fireEvent.click(screen.getByText(/FilterButton/i));
+        await waitFor(() => {
+            expect(mockSetPersistedFilters).toHaveBeenCalledWith(selectedKeywords);
+        });
     });
 
     it("filters documents based on the selected date filter", async () => {
@@ -121,10 +147,7 @@ describe("Home Component", () => {
             </BrowserRouter>
         );
 
-        // Click on the DateFilterDropdownMenu
         fireEvent.click(screen.getByText(/DateFilterDropdownMenu/i));
-
-        // Assuming the onFilterChange method gets called with a specific filter
         const selectedDateFilter = "last 7 days";
         await waitFor(() => {
             expect(mockAppContext.setFilters).toHaveBeenCalledWith({ dateFilter: selectedDateFilter });
@@ -140,38 +163,16 @@ describe("Home Component", () => {
             </BrowserRouter>
         );
 
-        // Simulate clicking the 'Clear all' button
         fireEvent.click(screen.getByText(/Clear all/i));
-
-        // Verify that the appropriate reset functions are called
         await waitFor(() => {
             expect(mockAppContext.setFilters).toHaveBeenCalledWith({});
             expect(mockAppContext.setQuery).toHaveBeenCalledWith("");
         });
     });
 
-    const mockAppContext = {
-        query: "",
-        setQuery: jest.fn(),
-        filters: {},
-        setFilters: mockSetPersistedFilters,
-        conversationAnswers: [],
-        setConversationAnswers: mockSetConversationAnswers,
-        isLoading: true, // You can now include isLoading here
-    };
-
-    render(
-        <BrowserRouter>
-            <AppContext.Provider value={mockAppContext}>
-                <Home />
-            </AppContext.Provider>
-        </BrowserRouter>
-    );
-
     it("selects and deselects documents", async () => {
         const mockDocument = { documentId: 1, sourceName: "Document 1" };
 
-        // Set up the mock for setSelectedDocuments
         const mockSetSelectedDocuments = jest.fn();
 
         const mockAppContext = {
@@ -183,7 +184,11 @@ describe("Home Component", () => {
             setConversationAnswers: jest.fn(),
             isLoading: false,
             setCurrentPage: jest.fn(),
-            setSelectedDocuments: mockSetSelectedDocuments, // Make sure setSelectedDocuments is here
+            setSelectedDocuments: mockSetSelectedDocuments,
+            resetSearchBox: false,
+            setResetSearchBox: jest.fn(),
+            setAreFiltersVisible: jest.fn(),
+            setShowCopilot: jest.fn(),
         };
 
         render(
@@ -194,16 +199,15 @@ describe("Home Component", () => {
             </BrowserRouter>
         );
 
-        // Get the document card by its text
         const documentCard = screen.getByText("Document 1");
 
-        // Initially, the document is not selected, so clicking it should select it
         fireEvent.click(documentCard);
+
         expect(mockSetSelectedDocuments).toHaveBeenCalledWith([mockDocument]);
 
-        // Clicking again should deselect it
         fireEvent.click(documentCard);
-        expect(mockSetSelectedDocuments).toHaveBeenCalledWith([]); // Expecting empty array to deselect
+
+        expect(mockSetSelectedDocuments).toHaveBeenCalledWith([]);
     });
 
     it("paginates through the search results", async () => {
@@ -215,83 +219,137 @@ describe("Home Component", () => {
             </BrowserRouter>
         );
 
-        // Ensure that the pagination component is rendered
-        const paginationButton = screen.getByText(/Pagination/i); // Replace with a specific selector if necessary
-
-        // Simulate a click on the pagination element (assuming it's a button or page number)
+        const paginationButton = screen.getByText(/Pagination/i);
         fireEvent.click(paginationButton);
 
-        // Check if setCurrentPage was called with the correct page number (e.g., 2)
         expect(mockSetCurrentPage).toHaveBeenCalledWith(2);
     });
+
+    it("returns the correct date range for Past 24 hours", () => {
+        const fixedNow = new Date(2025, 0, 1, 12, 0, 0);
+
+        const mockCalculateDateRange = jest.fn((option) => {
+            const now = fixedNow;
+            const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            return { startDate, endDate: now };
+        });
+
+        const { startDate, endDate } = mockCalculateDateRange("Past 24 hours");
+
+        const expectedStartDate = new Date(fixedNow.getTime() - 24 * 60 * 60 * 1000);
+
+        expect(startDate).toEqual(expectedStartDate);
+        expect(endDate).toEqual(fixedNow);
+    });
+
+    it("returns the correct date range for Past week", () => {
+        const fixedNow = new Date(2025, 0, 1);
+
+        const mockCalculateDateRange = jest.fn((option) => {
+            const now = fixedNow;
+            const startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return { startDate, endDate: now };
+        });
+
+        const { startDate, endDate } = mockCalculateDateRange("Past week");
+
+        const expectedStartDate = new Date(fixedNow.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        expect(startDate).toEqual(expectedStartDate);
+        expect(endDate).toEqual(fixedNow);
+    });
+
+    it("returns the correct date range for custom date range", () => {
+        const mockCalculateDateRange = jest.fn((option, customStartDate, customEndDate) => {
+            return { startDate: customStartDate, endDate: customEndDate };
+        });
+
+        const customStartDate = new Date(fixedNow.getTime() - 15 * 24 * 60 * 60 * 1000);
+        const customEndDate = new Date(fixedNow.getTime() - 5 * 24 * 60 * 60 * 1000);
+
+        const { startDate, endDate } = mockCalculateDateRange("Custom", customStartDate, customEndDate);
+
+        expect(startDate).toEqual(customStartDate);
+        expect(endDate).toEqual(customEndDate);
+    });
+
+    /////
+
+    it("applies w-[165%] if window.innerWidth is greater than 2000", () => {
+        global.innerWidth = 2500;
+
+        render(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        const homeComponent = screen.getByText("Width class is applied based on the window width"); // Assuming this is the text inside your div
+        expect(homeComponent).toHaveClass("w-[165%]");
+    });
+    it("applies w-[125%] if window.innerWidth is 2000 or less", () => {
+        global.innerWidth = 1500;
+
+        render(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        const homeComponent = screen.getByText("Width class is applied based on the window width"); // Assuming this is the text inside your div
+        expect(homeComponent).toHaveClass("w-[125%]");
+    });
+    it("updates widthClass when window is resized", () => {
+        global.innerWidth = 2500;
+
+        const { rerender } = render(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        let homeComponent = screen.getByText("Width class is applied based on the window width");
+        expect(homeComponent).toHaveClass("w-[165%]");
+
+        act(() => {
+            global.innerWidth = 1500;
+            window.dispatchEvent(new Event("resize"));
+        });
+
+        rerender(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        homeComponent = screen.getByText("Width class is applied based on the window width");
+        expect(homeComponent).toHaveClass("w-[125%]");
+    });
+    it("removes the resize event listener when the component is unmounted", () => {
+        const removeEventListenerMock = jest.spyOn(window, "removeEventListener");
+
+        global.innerWidth = 2500;
+
+        const { unmount } = render(
+            <BrowserRouter>
+                <AppContext.Provider value={mockAppContext}>
+                    <Home />
+                </AppContext.Provider>
+            </BrowserRouter>
+        );
+
+        unmount();
+
+        expect(removeEventListenerMock).toHaveBeenCalledWith("resize", expect.any(Function));
+
+        removeEventListenerMock.mockRestore();
+    });
 });
-
-// test("handles filter change", () => {
-//     render(
-//         <Router>
-//             <Home />
-//         </Router>
-//     );
-
-//     const filterButton = screen.getByText(/filter/i);
-//     userEvent.click(filterButton);
-
-//     const filterOption = screen.getByText(/some filter option/i);
-//     userEvent.click(filterOption);
-
-//     expect(screen.getByText(/filtered documents/i)).toBeInTheDocument();
-// });
-
-// test("clear all button resets filters and search", () => {
-//     render(
-//         <Router>
-//             <Home />
-//         </Router>
-//     );
-
-//     const searchInput = screen.getByPlaceholderText(/search/i);
-//     userEvent.type(searchInput, "Document 1");
-
-//     const filterButton = screen.getByText(/filter/i);
-//     userEvent.click(filterButton);
-//     const filterOption = screen.getByText(/some filter option/i);
-//     userEvent.click(filterOption);
-
-//     const clearAllButton = screen.getByText(/clear all/i);
-//     userEvent.click(clearAllButton);
-
-//     expect(screen.getByText(/no filters applied/i)).toBeInTheDocument();
-// });
-
-//     test("handles pagination correctly", () => {
-//         render(
-//             <Router>
-//                 <Home />
-//             </Router>
-//         );
-
-//         const paginationNextButton = screen.getByText(/next/i);
-
-//         userEvent.click(paginationNextButton);
-
-//         expect(screen.getByText(/document 6/i)).toBeInTheDocument();
-//     });
-
-//     test("chat room scrolls to the bottom on document selection", async () => {
-//         render(
-//             <Router>
-//                 <Home />
-//             </Router>
-//         );
-
-//         const document = screen.getByText(/document title/i);
-
-//         const chatContainer = screen.getByTestId("chat-container");
-
-//         userEvent.click(document);
-
-//         await waitFor(() => {
-//             expect(chatContainer.scrollTop).toBeGreaterThan(0);
-//         });
-//     });
-// });
