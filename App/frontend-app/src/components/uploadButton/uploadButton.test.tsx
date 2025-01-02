@@ -1,50 +1,38 @@
-// import { useDropzone } from "react-dropzone";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import UploadButton from "./uploadButton";
 import { jest } from "@jest/globals";
-import { useDropzone } from "react-dropzone";
+import { act } from "react-dom/test-utils";
+import { importDocuments } from "../../api/documentsService";
 
-const mockDropZoneFunctions = () => {
-    const mockOpen = jest.fn();
-    const mockGetRootProps = jest.fn().mockReturnValue({
-        "data-testid": "dropzone-root",
-        refKey: "dropzone-root-ref",
-    });
-    const mockGetInputProps = jest.fn().mockReturnValue({
-        "data-testid": "dropzone-input",
-        refKey: "dropzone-input-ref",
-    });
-    (useDropzone as jest.Mock).mockReturnValue({
-        getRootProps: mockGetRootProps,
-        getInputProps: mockGetInputProps,
-        open: mockOpen,
-        acceptedFiles: [],
-    });
+jest.mock("../../api/documentsService", () => ({
+    importDocuments: jest.fn(),
+}));
+
+const testIDS = {
+    FILE_DROP_AREA: "file-drop-area",
+    UPLOAD_DIALOG_CLOSE_BTN: "upload-dialog-close-btn",
 };
 
-// Mock the react-dropzone module
-jest.mock("react-dropzone", () => ({
-    // Mock the useDropzone hook
-    useDropzone: jest.fn(),
-}));
+function mockData(files: any[]) {
+    return {
+        dataTransfer: {
+            files,
+            items: files.map((file) => ({
+                kind: "file",
+                type: file.type,
+                getAsFile: () => file,
+            })),
+            types: ["Files"],
+        },
+    };
+}
 
 describe("Upload Button Component", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    it.skip("renders and displays the Upload Button correctly", async () => {
-        mockDropZoneFunctions();
-
-        render(<UploadButton />);
-
-        const uploadDocumentsButton = await screen.findByRole("button", { name: /upload documents/i });
-        expect(uploadDocumentsButton).toBeInTheDocument();
-    });
-
-    it.skip("On click close upload dialog should close", async () => {
-        mockDropZoneFunctions();
-
+    it("On click close upload dialog should close", async () => {
         render(<UploadButton />);
 
         // Click event for upload button we are doing here
@@ -55,7 +43,7 @@ describe("Upload Button Component", () => {
         const headingWithUploadDocumentsText = await screen.findByRole("heading", { name: /upload Documents/i });
         expect(headingWithUploadDocumentsText).toBeInTheDocument();
 
-        const closeUploadDialogBtn = screen.getByTestId("closeUploadDialogBtn");
+        const closeUploadDialogBtn = screen.getByTestId(testIDS.UPLOAD_DIALOG_CLOSE_BTN);
         fireEvent.click(closeUploadDialogBtn);
 
         await waitFor(() => {
@@ -63,193 +51,65 @@ describe("Upload Button Component", () => {
         });
     });
 
-    it.skip("On click of Upload Button Dialog should open", async () => {
-        mockDropZoneFunctions();
+    it("input should handle File Drop correctly and upload file >", async () => {
+        (importDocuments as jest.Mock).mockReturnValue({ status: "success" });
 
         render(<UploadButton />);
 
-        // Click event for upload button we are doing here
-        const uploadDocumentsButton = await screen.findByRole("button", { name: /upload documents/i });
-        fireEvent.click(uploadDocumentsButton);
+        const uploadButton = screen.getByRole("button", { name: /upload documents/i });
+        fireEvent.click(uploadButton);
 
-        // In upload dialog
-        const headingWithUploadDocumentsText = await screen.findByRole("heading", { name: /upload Documents/i });
-        expect(headingWithUploadDocumentsText).toBeInTheDocument();
+        await act(() => {
+            const dropElement = screen.getByTestId(testIDS.FILE_DROP_AREA);
+            const file = new File(["file content"], "example.pdf", { type: "application/pdf" });
+            const dropEventData = mockData([file]);
 
-        const dragAndDropArea = await screen.findByText(/drag and drop files/i);
-        expect(dragAndDropArea).toBeInTheDocument();
+            fireEvent.dragEnter(dropElement, dropEventData);
 
-        const browseFiles = await screen.findByRole("button", { name: /browse files/i });
-        expect(browseFiles).toBeInTheDocument();
-    });
-
-    it("Browser file button to be handled correctly", async () => {
-        const mockOpen = jest.fn();
-        const mockGetRootProps = jest.fn().mockReturnValue({
-            "data-testid": "dropzone-root",
-        });
-        const mockGetInputProps = jest.fn().mockReturnValue({
-            "data-testid": "dropzone-input",
-        });
-        const mockOnDrop = jest.fn();
-
-        (useDropzone as jest.Mock).mockReturnValue({
-            getRootProps: mockGetRootProps,
-            getInputProps: mockGetInputProps,
-            open: mockOpen,
-            onDrop: mockOnDrop,
-        });
-        render(<UploadButton />);
-
-        // Click event for upload button we are doing here
-        const uploadDocumentsButton = await screen.findByRole("button", { name: /upload documents/i });
-        fireEvent.click(uploadDocumentsButton);
-
-        const browseFilesButton = await screen.findByRole("button", { name: /browse files/i });
-        expect(browseFilesButton).toBeInTheDocument();
-        fireEvent.click(browseFilesButton);
-        expect(mockOpen).toHaveBeenCalled();
-
-        const fileInput = screen.getByTestId("dropzone-input");
-        console.log(fileInput);
-
-        // Create a mock file to simulate file selection
-        const file = new File(["file content"], "example.pdf", { type: "application/pdf" });
-
-        // Trigger the change event on the input field to simulate file selection
-
-        fireEvent.change(fileInput, {
-            target: { files: [file] },
-        });
-
-        await waitFor(() => {
-            console.log(mockOnDrop.mock.calls);
-            expect(mockOnDrop).toHaveBeenCalledWith([file]); // Assert onDrop is called with the file
+            fireEvent.drop(dropElement, dropEventData);
         });
 
         await waitFor(
             () => {
-                screen.debug();
-                // console.log("upload dialog end");
-                // You can add any checks to ensure the file selection was handled properly.
-                // expect(screen.getByText(/uploading/i)).toBeInTheDocument(); // Ensure the file is being uploaded
+                expect(importDocuments).toHaveBeenCalledTimes(1);
+                const fileNameElement = screen.queryByText("example.pdf");
+                expect(fileNameElement).toBeInTheDocument();
+                const uploadCompleteText = screen.queryByText("Upload complete");
+                expect(uploadCompleteText).toBeInTheDocument();
             },
-            { timeout: 5000 }
+            { timeout: 3000 }
         );
-    }, 6000);
+    });
 
-    // it.skip("should select a file via clicking and call onDrop method", async () => {
-    //     const mockOpen = jest.fn();
-    //     const mockGetRootProps = jest.fn().mockReturnValue({
-    //         "data-testid": "dropzone-root",
-    //     });
-    //     const mockGetInputProps = jest.fn().mockReturnValue({
-    //         "data-testid": "dropzone-input",
-    //     });
-    //     const mockOnDrop = jest.fn();
-
-    //     (useDropzone as jest.Mock).mockReturnValue({
-    //         getRootProps: mockGetRootProps,
-    //         getInputProps: mockGetInputProps,
-    //         open: mockOpen,
-    //         onDrop: mockOnDrop,
-    //     });
-
-    //     render(<UploadButton />);
-
-    //     // Trigger the dialog open by clicking the Upload button
-    //     const uploadButton = screen.getByRole("button", { name: /upload documents/i });
-    //     fireEvent.click(uploadButton);
-
-    //     // Get the file input element and create a mock file
-    //     const fileInput = screen.getByTestId("dropzone-input");
-    //     const file = new File(["file content"], "example.pdf", { type: "application/pdf" });
-
-    //     // Simulate file selection by changing the input value
-    //     fireEvent.change(fileInput, {
-    //         target: { files: [file] },
-    //     });
-
-    //     // Check that the file was added to the uploading files
-    //     await waitFor(() => {
-    //         expect(screen.getByText(/uploading/i)).toBeInTheDocument();
-    //         expect(screen.getByText("example.pdf")).toBeInTheDocument();
-    //     });
-
-    //     // Ensure that the onDrop method was called with the selected file
-    //     // const onDrop = useDropzone().onDrop;
-    //     expect(mockOnDrop).toHaveBeenCalledWith([file]);
-    // });
-
-    it.only("input should handle File Drop correctly and upload file", async () => {
-        const mockOpen = jest.fn();
-        const mockOnDrop = jest.fn();
-        const mockGetRootProps = jest.fn().mockReturnValue({
-            "data-testid": "dropzone-root",
-            onKeyDown: jest.fn(),
-            onFocus: jest.fn(),
-            onBlur: jest.fn(),
-            onClick: jest.fn(),
-            onDragEnter: jest.fn(),
-            onDragOver: jest.fn(),
-            onDragLeave: jest.fn(),
-            onDrop: mockOnDrop,
-            role: "presentation", // or use the appropriate role as needed
-            ref: jest.fn(), // this can be used for a ref callback or other purposes
-        });
-        const mockGetInputProps = jest.fn().mockReturnValue({
-            "data-testid": "dropzone-input",
-            onKeyDown: jest.fn(),
-            onFocus: jest.fn(),
-            onBlur: jest.fn(),
-            onClick: jest.fn(),
-            onDragEnter: jest.fn(),
-            onDragOver: jest.fn(),
-            onDragLeave: jest.fn(),
-            onDrop: mockOnDrop,
-            role: "presentation", // or use the appropriate role as needed
-            ref: jest.fn(), // this can be used for a ref callback or other purposes
-        });
-
-        (useDropzone as jest.Mock).mockReturnValue({
-            getRootProps: mockGetRootProps,
-            getInputProps: mockGetInputProps,
-            open: mockOpen,
-            onDrop: mockOnDrop,
-        });
+    it("Upload fail should handle properly", async () => {
+        (importDocuments as jest.Mock).mockReturnValue({ status: "success" });
 
         render(<UploadButton />);
 
-        // Trigger the dialog open by clicking the Upload button
         const uploadButton = screen.getByRole("button", { name: /upload documents/i });
         fireEvent.click(uploadButton);
 
-        // Get the file input element and create a mock file
-        // Get the file input element (though this is not used for a "drop")
-        const dropzoneRoot = screen.getByTestId("dropzone-root");
-        console.log("dropzoneRoot debug start");
-        screen.debug(dropzoneRoot);
-        console.log("dropzoneRoot debug end");
-        // console.log("dropzoneRoot", dropzoneRoot);
-        // Create a mock file
-        const file = new File(["file content"], "example.pdf", { type: "application/pdf" });
+        await act(() => {
+            const dropElement = screen.getByTestId(testIDS.FILE_DROP_AREA);
+            const file = new File(["file content"], "example.pdf", { type: "application/pdf" });
+            const dropEventData = mockData([file]);
 
-        // Simulate file drop by manually calling onDrop with the file
-        fireEvent.drop(dropzoneRoot, {
-            dataTransfer: {
-                files: [file],
-            },
+            fireEvent.dragEnter(dropElement, dropEventData);
+
+            fireEvent.drop(dropElement, dropEventData);
         });
 
-        expect(mockOnDrop).toHaveBeenCalledWith([file]);
+        (importDocuments as jest.Mock).mockRejectedValueOnce(new Error("Upload document failed ") as never);
 
-        // // Check that the file was added to the uploading files
-        // await waitFor(() => {
-        //     expect(screen.getByText(/uploading/i)).toBeInTheDocument();
-        //     expect(screen.getByText("example.pdf")).toBeInTheDocument();
-        // });
-
-        // Ensure that the onDrop method was called with the selected file
-        // const onDrop = useDropzone().onDrop;
+        await waitFor(
+            () => {
+                expect(importDocuments).toHaveBeenCalledTimes(1);
+                const fileNameElement = screen.queryByText("example.pdf");
+                expect(fileNameElement).toBeInTheDocument();
+                const uploadCompleteText = screen.queryByText("Upload failed");
+                expect(uploadCompleteText).toBeInTheDocument();
+            },
+            { timeout: 3000 }
+        );
     });
 });
