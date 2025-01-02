@@ -95,6 +95,7 @@ const UploadDocumentsDialog = () => {
               appearance="subtle"
               onClick={() => setIsOpen(false)}
               style={{ position: "absolute", right: 20, top: 20 }}
+              data-testid="closeUploadDialogBtn"
             />
           </DialogTitle>
 
