@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Microsoft.GS.DPS\Microsoft.GS.DPS.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Storage\Document\Entities\" />
+  </ItemGroup>
+
 </Project>

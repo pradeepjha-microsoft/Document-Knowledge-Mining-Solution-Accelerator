@@ -4,7 +4,7 @@ using Microsoft.GS.DPS.Storage.Document.Entities;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.GS.DPS.Tests.ModelsTest
+namespace Microsoft.GS.DPS.Tests.ModelsTest.UserInterface
 {
     public class DocumentQuerySetTests
     {
@@ -144,5 +144,5 @@ namespace Microsoft.GS.DPS.Tests.ModelsTest
             Assert.Empty(result);
         }
     }
-   
+
 }

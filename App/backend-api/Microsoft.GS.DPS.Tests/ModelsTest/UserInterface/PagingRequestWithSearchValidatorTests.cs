@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace Microsoft.GS.DPS.Tests.ModelsTest
+namespace Microsoft.GS.DPS.Tests.ModelsTest.UserInterface
 {
 
     public class PagingRequestWithSearchValidatorTests
@@ -102,7 +102,7 @@ namespace Microsoft.GS.DPS.Tests.ModelsTest
             var model = new PagingRequestWithSearch { Keyword = null };
             var result = _validator.TestValidate(model);
             result.ShouldNotHaveValidationErrorFor(x => x.Keyword);
-        }        
+        }
 
         [Fact]
         public void Should_Pass_When_Tags_Are_Empty()

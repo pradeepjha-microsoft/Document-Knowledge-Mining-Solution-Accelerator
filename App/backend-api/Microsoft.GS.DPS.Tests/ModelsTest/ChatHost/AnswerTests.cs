@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.GS.DPS.Tests.ModelsTest
+namespace Microsoft.GS.DPS.Tests.ModelsTest.ChatHost
 {
-   
+
     public class AnswerTests
     {
         [Fact]
