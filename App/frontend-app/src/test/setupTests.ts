@@ -39,6 +39,12 @@ afterAll(() => {
   window.IntersectionObserver = originalIntersectionObserver;
 });
 
+global.window = global.window || {};
+global.window.ENV = {
+  METADATA_EXCLUSION_LIST: ['item1', 'item2'], // Add your mock values here
+  AI_KNOWLEDGE_FIELDS : ['item1', 'item2'],
+};
+
 
 
 
