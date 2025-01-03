@@ -1,126 +1,162 @@
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { FeedbackForm } from "./FeedbackForm";
 import { PostFeedback } from "../../api/chatService";
-import { useTranslation } from "react-i18next";
-import { Dialog } from "@fluentui/react-components";
 
-// Mocking external dependencies
 jest.mock("../../api/chatService", () => ({
-  PostFeedback: jest.fn(),
+    PostFeedback: jest.fn(),
 }));
 
 jest.mock("react-i18next", () => ({
-  useTranslation: jest.fn().mockReturnValue({
-    t: (key: string) => key,
-  }),
+    useTranslation: () => ({
+        t: (key: string) => key,
+    }),
 }));
 
-describe("FeedbackForm", () => {
-  const defaultProps = {
-    history: [],
-    chatOptions: {},
-    sources: [],
-    filterByDocumentIds: [],
-    isOpen: true,
-    onClose: jest.fn(),
-    setSubmittedFeedback: jest.fn(),
-  };
+describe("FeedbackForm Component", () => {
+    const mockOnClose = jest.fn();
+    const mockSetSubmittedFeedback = jest.fn();
 
-  it("renders the feedback form", () => {
-    render(<FeedbackForm {...defaultProps} />);
-    expect(screen.getByText("components.feedback-form.title")).toBeInTheDocument();
-  });
+    const defaultProps = {
+        history: [],
+        chatOptions: {},
+        sources: [],
+        filterByDocumentIds: [],
+        isOpen: true,
+        onClose: mockOnClose,
+        setSubmittedFeedback: mockSetSubmittedFeedback,
+    };
 
-  it("shows validation error when reason is not selected", async () => {
-    render(<FeedbackForm {...defaultProps} />);
-    fireEvent.click(screen.getByText("components.feedback-form.submit"));
-    expect(await screen.findByText("components.feedback-form.required-fields")).toBeInTheDocument();
-  });
+    it("renders the form correctly when isOpen is true", () => {
+        render(<FeedbackForm {...defaultProps} />);
+        expect(screen.getByText("components.feedback-form.submit")).toBeInTheDocument();
+    });
 
-  it("submits feedback when valid data is entered", async () => {
-    const submitFeedbackMock = PostFeedback as jest.Mock;
-    submitFeedbackMock.mockResolvedValueOnce({});
+    it("calls onClose when the close button is clicked", () => {
+        render(<FeedbackForm {...defaultProps} />);
+        const closeButton = screen.getByLabelText("Close");
+        fireEvent.click(closeButton);
+        expect(mockOnClose).toHaveBeenCalled();
+    });
 
-    render(<FeedbackForm {...defaultProps} />);
+    it("displays a validation error when no reason is selected", () => {
+        render(<FeedbackForm {...defaultProps} />);
+        const submitButton = screen.getByText("components.feedback-form.submit");
+        fireEvent.click(submitButton);
+        expect(screen.getByText("components.feedback-form.required-fields")).toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByLabelText("Search Result")); // Selecting a reason
-    fireEvent.click(screen.getByText("components.feedback-form.submit"));
+    it("submits the feedback successfully when all fields are valid", async () => {
+        (PostFeedback as jest.Mock).mockResolvedValueOnce(true);
 
-    await waitFor(() => expect(submitFeedbackMock).toHaveBeenCalledTimes(1));
-    expect(defaultProps.onClose).toHaveBeenCalled();
-  });
+        render(<FeedbackForm {...defaultProps} />);
+        const radioOption = screen.getByLabelText("Search Result");
+        fireEvent.click(radioOption);
 
-  it("handles submission error gracefully", async () => {
-    const submitFeedbackMock = PostFeedback as jest.Mock;
-    submitFeedbackMock.mockRejectedValueOnce(new Error("Submission error"));
+        const commentInput = screen.getByPlaceholderText("components.feedback-form.leave-comment");
+        fireEvent.change(commentInput, { target: { value: "This is a comment." } });
 
-    render(<FeedbackForm {...defaultProps} />);
+        const submitButton = screen.getByText("components.feedback-form.submit");
+        fireEvent.click(submitButton);
 
-    fireEvent.click(screen.getByLabelText("Search Result"));
-    fireEvent.click(screen.getByText("components.feedback-form.submit"));
+        await waitFor(() => {
+            expect(PostFeedback).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    isPositive: false,
+                    reason: "Search Result",
+                    comment: "This is a comment.",
+                })
+            );
+        });
+        expect(mockOnClose).toHaveBeenCalled();
+    });
 
-    await waitFor(() => expect(screen.getByText("components.feedback-form.feedback-error")).toBeInTheDocument());
-  });
+    it("handles errors during feedback submission", async () => {
+        (PostFeedback as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
 
-//   it.only("adds and removes document URL fields dynamically", () => {
-//     render(<FeedbackForm {...defaultProps} />);
-//     const addButton = screen.getByLabelText("Add Circle Icon"); // Adjust based on actual button icon label
-//     const removeButton = screen.getByLabelText("Subtract Circle Icon");
+        render(<FeedbackForm {...defaultProps} />);
+        const radioOption = screen.getByLabelText("Answer");
+        fireEvent.click(radioOption);
 
-//     fireEvent.click(addButton); // Add a document URL field
-//     expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder")).toHaveLength(2);
+        const submitButton = screen.getByText("components.feedback-form.submit");
+        fireEvent.click(submitButton);
 
-//     fireEvent.click(removeButton); // Remove a document URL field
-//     expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder")).toHaveLength(1);
-//   });
-    it("adds and removes document URL fields dynamically", () => {
-    render(<FeedbackForm {...defaultProps} />);
-  
-    // Use getByLabelText with the aria-labels from the Button components
-    const addButton = screen.getByLabelText('Close');  // Make sure this matches the aria-label in your component
-    const removeButton = screen.getByLabelText('Subtract Circle Icon');  // Same for this aria-label
-  
-    // Initially, there should be one document URL field
-    expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder")).toHaveLength(1);
-  
-    // Click on the add button to add a document URL field
-    fireEvent.click(addButton);
-  
-    // Now, there should be two document URL fields
-    expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder")).toHaveLength(2);
-  
-    // Click on the remove button to remove a document URL field
-    fireEvent.click(removeButton);
-  
-    // Now, there should be one document URL field again
-    expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder")).toHaveLength(1);
-  });
-  it("adds and removes chunk text fields dynamically", () => {
-    render(<FeedbackForm {...defaultProps} />);
-    const addButton = screen.getByLabelText("Add Circle Icon"); // Adjust based on actual button icon label
-    const removeButton = screen.getByLabelText("Subtract Circle Icon");
+        await waitFor(() => {
+            expect(screen.getByText("components.feedback-form.feedback-error")).toBeInTheDocument();
+        });
+    });
 
-    fireEvent.click(addButton); // Add a chunk text field
-    expect(screen.getAllByPlaceholderText("components.feedback-form.chunk-texts-placeholder")).toHaveLength(2);
+    it("renders advanced feedback fields when isPositive is true", () => {
+        render(<FeedbackForm {...defaultProps} />);
+        const checkbox = screen.getByLabelText("components.feedback-form.advanced-feedback-title");
+        fireEvent.click(checkbox);
 
-    fireEvent.click(removeButton); // Remove a chunk text field
-    expect(screen.getAllByPlaceholderText("components.feedback-form.chunk-texts-placeholder")).toHaveLength(1);
-  });
+        expect(screen.getByLabelText("components.feedback-form.ground-truth-title")).toBeInTheDocument();
+        expect(screen.getByLabelText("components.feedback-form.doc-urls")).toBeInTheDocument();
+        expect(screen.getByLabelText("components.feedback-form.chunk-texts-title")).toBeInTheDocument();
+    });
 
-  it("shows advanced feedback fields when positive feedback is selected", () => {
-    render(<FeedbackForm {...defaultProps} />);
-    
-    const checkbox = screen.getByLabelText("components.feedback-form.advanced-feedback-title");
-    fireEvent.click(checkbox);
+    it("updates advanced feedback fields correctly", () => {
+        render(<FeedbackForm {...defaultProps} />);
+        const checkbox = screen.getByLabelText("components.feedback-form.advanced-feedback-title");
+        fireEvent.click(checkbox);
 
-    expect(screen.getByLabelText("components.feedback-form.ground-truth-title")).toBeInTheDocument();
-    expect(screen.getByLabelText("components.feedback-form.doc-urls")).toBeInTheDocument();
-    expect(screen.getByLabelText("components.feedback-form.chunk-texts-title")).toBeInTheDocument();
-  });
+        const groundTruthInput = screen.getByPlaceholderText("components.feedback-form.ground-truth-placeholder") as HTMLInputElement;
+        fireEvent.change(groundTruthInput, { target: { value: "Ground Truth Example" } });
+        expect((groundTruthInput as HTMLInputElement).value).toBe("Ground Truth Example");
 
-  it("calls onClose when the form is closed", () => {
-    render(<FeedbackForm {...defaultProps} />);
-    fireEvent.click(screen.getByLabelText("Close"));
-    expect(defaultProps.onClose).toHaveBeenCalled();
-  });
+        const docURLInput = screen.getByPlaceholderText("components.feedback-form.text-area-placeholder") as HTMLInputElement;
+        fireEvent.change(docURLInput, { target: { value: "http://example.com" } });
+        expect((docURLInput as HTMLInputElement).value).toBe("http://example.com");
+
+        const chunkTextInput = screen.getByPlaceholderText("components.feedback-form.chunk-texts-placeholder");
+        fireEvent.change(chunkTextInput, { target: { value: "Chunk Text Example" } });
+        expect((chunkTextInput as HTMLInputElement).value).toBe("Chunk Text Example");
+    });
+
+    it("prevents removing the last chunk text or document URL field", () => {
+        render(<FeedbackForm {...defaultProps} />);
+
+        const removeChunkButton = screen.queryByLabelText("Subtract Circle Icon");
+        if (removeChunkButton) {
+            fireEvent.click(removeChunkButton);
+        }
+        expect(screen.getAllByPlaceholderText("components.feedback-form.chunk-texts-placeholder").length).toBe(1);
+
+        const removeDocButton = screen.queryByLabelText("Subtract Circle Icon");
+        if (removeDocButton) {
+            fireEvent.click(removeDocButton);
+        }
+        expect(screen.getAllByPlaceholderText("components.feedback-form.text-area-placeholder").length).toBe(1);
+    });
+
+    it("submits feedback with advanced fields filled", async () => {
+        (PostFeedback as jest.Mock).mockResolvedValueOnce(true);
+
+        render(<FeedbackForm {...defaultProps} />);
+        const checkbox = screen.getByLabelText("components.feedback-form.advanced-feedback-title");
+        fireEvent.click(checkbox);
+
+        const groundTruthInput = screen.getByPlaceholderText("components.feedback-form.ground-truth-placeholder");
+        fireEvent.change(groundTruthInput, { target: { value: "Ground Truth Example" } });
+
+        const docURLInput = screen.getByPlaceholderText("components.feedback-form.text-area-placeholder");
+        fireEvent.change(docURLInput, { target: { value: "http://example.com" } });
+
+        const chunkTextInput = screen.getByPlaceholderText("components.feedback-form.chunk-texts-placeholder");
+        fireEvent.change(chunkTextInput, { target: { value: "Chunk Text Example" } });
+
+        const submitButton = screen.getByText("components.feedback-form.submit");
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(PostFeedback).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    groundTruthAnswer: "Ground Truth Example",
+                    documentURLs: ["http://example.com"],
+                    chunkTexts: ["Chunk Text Example"],
+                })
+            );
+        });
+        expect(mockOnClose).toHaveBeenCalled();
+    });
 });

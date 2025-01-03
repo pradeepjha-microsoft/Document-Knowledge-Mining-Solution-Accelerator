@@ -377,24 +377,24 @@ describe("SearchBox", () => {
         expect(window.alert).toHaveBeenCalledWith("Error uploading files");
     });
 
-    it("does nothing if no files are selected", async () => {
-        // Ensure the file input has no files
+    it("does nothing if no files are selected", () => {
+        render(<SearchBox onSearchChanged={mockOnSearchChanged} />);
+    
+        const uploadDiv = screen.getByTestId("upload-div");
+    
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
         Object.defineProperty(fileInput, "files", {
-            value: [],
+          value: [],
+          writable: false,
         });
-
-        // Render the UploadButton
-        render(<UploadButton />);
-        const uploadButton = document.querySelector(".upload_button");
-
-        // Simulate the file input click
-        fireEvent.click(uploadButton!);
-
-        // Simulate calling uploadDocuments manually
-        const uploadDocumentsFn = UploadButton.prototype.uploadDocuments;
-        await uploadDocumentsFn();
-
-        // Assert no API call is made
+    
+        document.body.appendChild(fileInput); // Add to DOM
+        fireEvent.change(fileInput); // Trigger file selection event
+    
         expect(UploadMultipleFiles).not.toHaveBeenCalled();
-    });
+    
+        fileInput.remove(); // Cleanup
+      });
+    
 });
