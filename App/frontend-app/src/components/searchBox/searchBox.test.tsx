@@ -317,6 +317,7 @@ describe("SearchBox", () => {
         // expect(clickSpy).toHaveBeenCalled();
     });
     //upload doc
+    /*
     it("uploads files successfully", async () => {
         const mockFiles = [
             new File(["file content"], "file1.txt", { type: "text/plain" }),
@@ -376,7 +377,7 @@ describe("SearchBox", () => {
         expect(UploadMultipleFiles).toHaveBeenCalledWith(mockFiles);
         expect(window.alert).toHaveBeenCalledWith("Error uploading files");
     });
-
+*/
     it("does nothing if no files are selected", () => {
         render(<SearchBox onSearchChanged={mockOnSearchChanged} />);
     

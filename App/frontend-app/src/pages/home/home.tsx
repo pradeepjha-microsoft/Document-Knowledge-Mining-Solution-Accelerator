@@ -356,13 +356,13 @@ export function Home({ isSearchResultsPage }: HomeProps) {
             startDate = dateRange.startDate;
             endDate = dateRange.endDate;
         }
-        // handleDateRange();
+        const filtersArray: string[] = Object.values(selectedFilters);
         const payload: SearchRequest = {
             queryText: query || "*",
             searchFacets: searchFacets,
             currentPage: currentPage,
             incomingFilter: "",
-            filters: selectedFilters,
+            filters: filtersArray,
             parameters: {
                 scoringProfile: scoringProfile,
                 inOrderBy: [inOrderBy],
