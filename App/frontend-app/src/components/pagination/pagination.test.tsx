@@ -104,7 +104,6 @@ describe("Pagination Component", () => {
     //     // const leftArrow = screen.getByRole("button", { name: /previous page/i }).not.toBeDisabled();
     //     const leftArrow = expect(screen.getByRole('button', { name: /left/i })).not.toBeDisabled();
     //     // expect(leftArrow).toBeDisabled();
-    //     screen.debug();
     //     expect(leftArrow).not.toBeInTheDocument();
     // });
 
@@ -152,7 +151,6 @@ describe("Pagination Component", () => {
     //     );
 
     //     const rightArrow = screen.getByRole("button", { name: /chevron right/i });
-    //     screen.debug();
     //     expect(rightArrow).toBeDisabled();
     // });
 

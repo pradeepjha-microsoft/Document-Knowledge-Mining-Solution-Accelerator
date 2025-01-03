@@ -296,7 +296,6 @@ describe("ChatRoom Component", () => {
     );
 
     await waitFor(async() => {
-      screen.debug();
       const suggestionBtn = await screen.findByRole('button', { name: /What specific accessibility features are most needed in U.S. homes?/ });
       expect(suggestionBtn).toBeInTheDocument();
       fireEvent.click(suggestionBtn);
@@ -365,7 +364,6 @@ describe("ChatRoom Component", () => {
     );
 
     await waitFor(() => {
-      screen.debug();
       const suggestionBtn = screen.getByRole('button', { name: /What specific accessibility features are most needed in U.S. homes?/ });
     });
 
@@ -381,7 +379,6 @@ describe("ChatRoom Component", () => {
     chatContainer.scrollTop = 400; // Simulate scroll position
     chatContainer.dispatchEvent(new Event("scroll"));
     await waitFor(async ()=>{
-      screen.debug();
       const optionalPanel = await screen.findByTestId('options-panel')
       expect(optionalPanel.classList.contains("sticky-class")).toBe(true);
     })

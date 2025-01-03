@@ -5,10 +5,7 @@ import { PageNumberTab } from './pageNumberTab';
 import { Document } from '../../api/apiTypes/embedded';
 import { Image, Text } from '@fluentui/react-components';
 
-// Mocking window.ENV object
-window.ENV = {
-  STORAGE_URL: 'https://storage.example.com/'
-};
+
 
 describe('PageNumberTab Component', () => {
   const mockDocument: Document = {

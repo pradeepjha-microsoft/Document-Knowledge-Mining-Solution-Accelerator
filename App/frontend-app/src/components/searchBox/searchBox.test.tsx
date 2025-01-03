@@ -83,7 +83,6 @@ describe("SearchBox", () => {
                 onKeyDown={mockOnKeyDown} 
             />
         );
-        screen.debug();
         const input = screen.getByRole("searchbox");
         fireEvent.change(input, { target: { value: "test query" } });
         // expect(screen.getByLabelText("Type your search Keyword.")).toBeInTheDocument();
@@ -304,7 +303,6 @@ describe("SearchBox", () => {
 
         // Render the UploadButton component
         render(<UploadButton />);
-        screen.debug();
         // Find the upload button
         const uploadButton = document.querySelector(".upload_button");
 
