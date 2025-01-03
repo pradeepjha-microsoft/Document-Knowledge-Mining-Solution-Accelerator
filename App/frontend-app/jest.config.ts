@@ -71,7 +71,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/src/components/uploadButton/uploadButton2.tsx',
     '<rootDir>/src/components/searchResult/old.tsx',
     '<rootDir>/src/components/chat/modelSwitch.tsx',
-    '<rootDir>/src/pages/home.tsx',
+    '<rootDir>/src/pages/home/home.tsx',
   ],
 }
 
