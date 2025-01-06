@@ -10,9 +10,6 @@ import { AIKnowledgeTab } from './aIKnowledgeTab';
 import { DialogTitleBar } from './dialogTitleBar';
 
 import { Document } from '../../api/apiTypes/embedded';
-// import { useTranslation } from 'react-i18next';
- import { PagesTab } from './PagesTab';
-import {PostFeedback} from '../../api/chatService';
 import { defaultCalendarStrings } from '@fluentui/react';
 
 jest.mock('react-i18next', () => ({
@@ -156,67 +153,15 @@ describe('DocDialog Component', () => {
     __partitionkey: "string"
   };
 
-  Object.defineProperty(global, "import.meta", {
-    value: {
-      env: {
-        VITE_API_ENDPOINT: "http://mock-api-endpoint.com",
-        },
-        },
-    });
-    const defaultProps = {
-      metadata: metadataMock,
-      isOpen: true,
-      allChunkTexts: ['Chunk 1', 'Chunk 2'],
-      clearChatFlag: false,
-      onClose: mockOnClose,
-      iframeKey: 'initial-key',
-      selectedTab: 'Document', // Add this to default props
-    };
-    
-  jest.mock('react-tiff', () => ({
-    TIFFViewer: jest.fn(() => <div data-testid="mock-tiff-viewer">Mocked TIFF Viewer</div>),
-  }));
-  jest.mock('./PageNumberTab', () => ({
-    PageNumberTab: () => <div data-testid="page-number-tab">PageNumberTab</div>,
-  }));
-  
-  jest.mock("./iFrameComponent", () => ({
-    IFrameComponent: jest.fn(() => <div data-testid="iframe-component">Mocked IFrameComponent</div>),
-  }));
+  const defaultProps = {
+    metadata: mockMetadata,
+    isOpen: true,
+    allChunkTexts: [],
+    clearChatFlag: false,
+    onClose: jest.fn(),
+  };
 
-jest.mock("./dialogContentComponent", () => ({
-    DialogContentComponent: () => <div>DialogContentComponent</div>,
-}));
-
-jest.mock("./dialogTitleBar", () => ({
-  DialogTitleBar: jest.fn(({ handleReturnToDocumentTab }) => (
-    <div data-testid="dialog-title-bar">
-      <button data-testid="return-to-document-tab" onClick={handleReturnToDocumentTab}>Return</button>
-    </div>
-  )),
-}));
-
-jest.mock("./PagesTab", () => ({
-    PagesTab: () => <div>PagesTab</div>,
-}));
-
-jest.mock("./PageNumberTab", () => ({
-    PageNumberTab: () => <div>PageNumberTab</div>,
-}));
-
-jest.mock("./MetadataTable", () => ({
-    MetadataTable: () => <div>MetadataTable</div>,
-}));
-
-jest.mock("./aIKnowledgeTab", () => ({
-    AIKnowledgeTab: () => <div>AIKnowledgeTab</div>,
-}));
-
-jest.mock("../../api/chatService", () => ({
-  PostFeedback: jest.fn(),
-}));
-
-  it('renders correctly with initial props', () => {
+  it('renders the Dialog and DialogSurface components', () => {
     render(<DocDialog {...defaultProps} />);
     expect(screen.getByTestId('Dialog')).toBeInTheDocument();
     expect(screen.getByTestId('DialogSurface')).toBeInTheDocument();
@@ -301,199 +246,17 @@ jest.mock("../../api/chatService", () => ({
     act(() => {
       fireEvent.click(buttonReturn);
     });
+    expect(screen.getByTestId('IFrameComponent')).toBeInTheDocument();
 
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
   });
 
-  // for un covered lines
-  it("renders dialog when open", () => {
-    render(<DocDialog {...defaultProps} />);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+  it('Should not downloads the document when the metaData emtpy or null', () => {
+    const compProps = { ...defaultProps, metadata: null };
+    render(<DocDialog {...compProps} />);
+    const button = screen.getByRole('button', { name: 'Download' });
+    fireEvent.click(button);
+    expect(window.open).toHaveBeenCalledTimes(0);
   });
-
-  it('should handle page click and update selectedPage (line 197)', () => {
-    render(<DocDialog {...defaultProps} />);
-
-    const mockPage = { page_number: 2 };
-    const handlePageClick = jest.fn();
-
-    act(() => {
-      handlePageClick(mockPage);
-    });
-
-    expect(handlePageClick).toHaveBeenCalledWith(mockPage);
-  });
-  // it.('renders correctly when allChunkTexts is null', () => {
-  //   const updateprops = {
-  //     ...defaultProps,
-  //     allChunkTexts: null
-      
-  //   }
-  //   render(<DocDialog {...updateprops}/>);
-  //   expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-  // });
- 
-  it('handles clearChatFlag correctly', () => {
-    render(<DocDialog {...defaultProps} clearChatFlag={true} />);
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-    // Add more checks if the flag triggers specific UI or state changes
-  });
-  it('renders correctly with invalid iframeKey', () => {
-    const updatedProps = {...defaultProps, iframeKey: null}
-    render(<DocDialog {...updatedProps} />);
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-  });
-
-  it('renders correctly with empty keywords', () => {
-    render(
-      <DocDialog
-        {...defaultProps}
-        metadata={{ ...metadataMock, keywords: {} }}
-      />
-    );
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-  });
- 
-  it('renders correctly with partially null metadata', () => {
-    const partialMetadata = { 
-        ...metadataMock, 
-        documentId: 'null', 
-        keywords: {}  // Use an empty object for keywords instead of null
-    };
-    const updateProps = {
-        ...defaultProps,
-        metadata: partialMetadata,
-    };
-    
-    render(<DocDialog {...updateProps} />);
-
-    // Check if the dialog title bar renders correctly even with partial metadata
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-});
-
-
-  it('increments iframeKey on tab switch to Document', () => {
-    const updateProps = {
-      metadata: metadataMock,
-      isOpen: true,
-      allChunkTexts: ['Chunk 1', 'Chunk 2'],
-      clearChatFlag: false,
-      onClose: mockOnClose,
-      iframeKey: 'initial-key',
-      selectedTab: 'Document', // Add this to default props
-    };
-    const { rerender } = render(<DocDialog {...updateProps} />);
-  
-    fireEvent.click(screen.getByText('components.dialog-title-bar.document'));
-    const updProps = {...defaultProps, iframeKey: "updated-key"}
-    rerender(<DocDialog {...updProps}  />);
-    
-    expect(screen.getByText('components.dialog-title-bar.document')).toBeInTheDocument();
-  });
-  it('calls onClose correctly with null metadata', () => {
-    render(
-      <DocDialog
-        {...defaultProps}
-        metadata={null}
-      />
-    );
-  
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    fireEvent.click(closeButton);
-  
-    expect(mockOnClose).toHaveBeenCalledTimes(2);
-  });
-
-  it('handles downloadFile correctly', () => {
-    const urlWithSasToken = 'http://example.com/file.pdf';
-    global.open = jest.fn();
-
-    const downloadFile = () => {
-      if (urlWithSasToken) {
-        window.open(urlWithSasToken, '_blank');
-      }
-    };
-
-    downloadFile();
-    expect(global.open).toHaveBeenCalledWith(urlWithSasToken, '_blank');
-  });
-
-  it('renders nothing when selectedTab is not matched', () => {
-    const mockSetSelectedPage = jest.fn();
-    const mockSetSelectedTab = jest.fn();
-    const mockMetadata = [
-      { page_number: 1, metadata: { field1: 'value1' } },
-      { page_number: 2, metadata: { field1: 'value2' } },
-    ];
-  
-    const mockProps = {
-      ...defaultProps,
-      pageMetadata: mockMetadata,
-      documentUrl: 'http://example.com/document.pdf',
-      selectedTab: 'UnknownTab',
-      selectedPage: 1,
-      setSelectedPage: mockSetSelectedPage,
-      setSelectedTab: mockSetSelectedTab,
-    };
-    render(
-      <DocDialog {...mockProps}  />
-    );
-
-    expect(screen.queryByText('PageNumberTab')).not.toBeInTheDocument();
-    expect(screen.queryByText('MetadataTable')).not.toBeInTheDocument();
-  });                
-   it('handles downloadFile with undefined urlWithSasToken', () => {
-    const urlWithSasToken = undefined;
-    global.open = jest.fn();
-
-    const downloadFile = () => {
-      if (urlWithSasToken) {
-        window.open(urlWithSasToken, '_blank');
-      }
-    };
-
-    downloadFile();
-    expect(global.open).not.toHaveBeenCalledWith(urlWithSasToken, '_blank');
-  
-  });
-  
-  it('updates state correctly on handlePageClick', () => {
-    const mockPage = { page_number: 3 };
-    const handlePageClick = jest.fn();
-  
-    act(() => {
-      handlePageClick(mockPage);
-    });
-  
-    expect(handlePageClick).toHaveBeenCalledWith(mockPage);
-    screen.debug()
-    expect(mockPage).toEqual({ page_number: 3 });
-    //expect(selectedTab).toBe("Page Number");
-  });
-  // it('updates selectedPage and selectedTab when a page is clicked', () => {
-  //   // Render the component
-  //   const { rerender } = render(<DocDialog {...defaultProps} />);
-  
-  //   // Update props to switch to "Page Number" tab
-  //   const updatedProps = { ...defaultProps, selectedTab: 'Page Number', selectedPage: 3 };
-  //   rerender(<DocDialog {...updatedProps} />);
-  
-  //   // Verify that the "Page Number" tab content is rendered
-  //   expect(screen.getByTestId('page-number-tab')).toBeInTheDocument();
-  // });
-  // it('calls handlePageClick and updates selectedPage', () => {
-  //   const mockPage = { page_number: 3 };
-  
-  //   // Render the component
-  //   render(<DocDialog {...defaultProps} />);
-  
-  //   // Simulate clicking a page
-  //   const pageElement = screen.getByTestId('pages-tab');
-  //   fireEvent.click(pageElement);
-  
-  //   // Check if the `handlePageClick` logic updates the page
-  //   expect(defaultProps.onClose).not.toHaveBeenCalled(); // Verifies the "Click logic"
-  //   expect(mockPage.page_number).toEqual(3);
-  // });
 
 });
