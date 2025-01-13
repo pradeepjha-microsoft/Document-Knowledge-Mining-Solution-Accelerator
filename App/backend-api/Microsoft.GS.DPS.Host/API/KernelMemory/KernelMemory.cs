@@ -8,10 +8,12 @@ using Microsoft.KernelMemory.Context;
 using Microsoft.GS.DPS.Model.KernelMemory;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.GS.DPS.Storage.Document;
+
 using HeyRed.Mime;
+
 namespace Microsoft.GS.DPSHost.API
 {
-    //Define File Upload and Ask API
+    // Define File Upload and Ask API
     public class KernelMemory
     {
         public static void AddAPIs(WebApplication app)
